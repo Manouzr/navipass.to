@@ -53,6 +53,10 @@ model Order {
   // Affiliation
   affiliateCode String?
 
+  // Issue reporting
+  accountIssueReported   Boolean   @default(false)
+  accountIssueReportedAt DateTime?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deliveredAt DateTime?

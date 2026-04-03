@@ -106,11 +106,25 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           </Card>
         )}
 
+        {/* Issue alert */}
+        {order.accountIssueReported && (
+          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 flex items-center gap-3">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <p className="text-sm font-bold text-red-700">Compte signalé par le client</p>
+              {order.accountIssueReportedAt && (
+                <p className="text-xs text-red-500">Signalé le {formatDate(order.accountIssueReportedAt)}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Actions */}
         <AdminOrderActions order={{
           id: order.id,
           status: order.status,
           orderNumber: order.orderNumber,
+          accountIssueReported: order.accountIssueReported,
         }} />
       </div>
     </div>

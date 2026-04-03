@@ -1,0 +1,48 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { verifyCredentialsToken, verifyProfilToken } from '@/lib/jwt'
+import { prisma } from '@/lib/prisma'
+
+export async function POST(req: NextRequest) {
+  // Must be logged in to profil
+  const profilToken = cookies().get('profil_session')?.value
+  const email = profilToken ? await verifyProfilToken(profilToken) : null
+  if (!email) {
+    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+  }
+
+  // Must have credentials unlocked
+  const credToken = cookies().get('credentials_unlocked')?.value
+  const credEmail = credToken ? await verifyCredentialsToken(credToken) : null
+  if (!credEmail || credEmail.toLowerCase() !== email.toLowerCase()) {
+    return NextResponse.json({ error: 'Vérification requise' }, { status: 403 })
+  }
+
+  const { orderId } = await req.json()
+  if (!orderId) {
+    return NextResponse.json({ error: 'orderId manquant' }, { status: 400 })
+  }
+
+  // Verify the order belongs to this user and is DELIVERED
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      email: { equals: email, mode: 'insensitive' },
+      status: 'DELIVERED',
+    },
+  })
+
+  if (!order) {
+    return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 })
+  }
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      accountIssueReported: true,
+      accountIssueReportedAt: new Date(),
+    },
+  })
+
+  return NextResponse.json({ success: true })
+}

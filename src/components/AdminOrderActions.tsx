@@ -7,13 +7,14 @@ import { Card } from '@/components/ui/Card'
 import { CTAButton } from '@/components/ui/CTAButton'
 import { RoundedInput } from '@/components/ui/RoundedInput'
 import { markProcessing, deliverOrder, deleteOrder } from '@/actions/admin'
-import { Mail, Lock, Calendar, Send, Trash2 } from 'lucide-react'
+import { Mail, Lock, Calendar, Send, Trash2, AlertTriangle } from 'lucide-react'
 
 interface Props {
   order: {
     id: string
     status: OrderStatus
     orderNumber: string
+    accountIssueReported?: boolean
   }
 }
 
@@ -102,7 +103,7 @@ export function AdminOrderActions({ order }: Props) {
     </div>
   )
 
-  if (order.status === 'DELIVERED') {
+  if (order.status === 'DELIVERED' && !order.accountIssueReported) {
     return (
       <Card padding="md" className="bg-green-50 border border-green-200">
         <p className="text-sm font-semibold text-green-800 text-center">✓ Commande livrée</p>
@@ -137,9 +138,18 @@ export function AdminOrderActions({ order }: Props) {
         </CTAButton>
       )}
 
-      {order.status === 'PROCESSING' && (
+      {order.accountIssueReported && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
+          <AlertTriangle size={16} className="text-red-500 shrink-0" />
+          <p className="text-sm font-semibold text-red-700">Compte signalé défaillant par le client</p>
+        </div>
+      )}
+
+      {(order.status === 'PROCESSING' || (order.status === 'DELIVERED' && order.accountIssueReported)) && (
         <form onSubmit={handleDeliver} className="space-y-4">
-          <h3 className="text-sm font-medium text-text-primary">Saisir les identifiants du compte IDF</h3>
+          <h3 className="text-sm font-medium text-text-primary">
+            {order.accountIssueReported ? 'Remplacer les identifiants' : 'Saisir les identifiants du compte IDF'}
+          </h3>
 
           <RoundedInput
             label="Email du compte IDF"
@@ -174,7 +184,7 @@ export function AdminOrderActions({ order }: Props) {
           />
 
           <CTAButton type="submit" loading={loading} icon={<Send size={18} />}>
-            Livrer la commande
+            {order.accountIssueReported ? 'Envoyer les nouveaux identifiants' : 'Livrer la commande'}
           </CTAButton>
         </form>
       )}

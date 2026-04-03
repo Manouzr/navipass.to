@@ -49,6 +49,7 @@ export default async function ProfilPage() {
       accountExpiry: order.accountExpiry,
       accountEmail,
       accountPassword,
+      accountIssueReported: order.accountIssueReported,
     }
   })
 

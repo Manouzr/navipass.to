@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, ChevronDown, ArrowRight, Lock, Mail, ShieldCheck, Copy, Check } from 'lucide-react'
+import { LogOut, ChevronDown, ArrowRight, Lock, Mail, AlertTriangle, Copy, Check } from 'lucide-react'
 import { OrderStatus, PlanType } from '@prisma/client'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -23,6 +23,7 @@ interface OrderData {
   accountExpiry: Date | null
   accountEmail: string | null
   accountPassword: string | null
+  accountIssueReported: boolean
 }
 
 interface Props {
@@ -197,6 +198,62 @@ function OtpUnlockBlock({ email, dark = false }: { email: string; dark?: boolean
   )
 }
 
+// ── Report issue button ────────────────────────────────────
+function ReportIssueBlock({ orderId, dark = false }: { orderId: string; dark?: boolean }) {
+  const router = useRouter()
+  const [confirm, setConfirm] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  async function report() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/report-issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      })
+      if (res.ok) { setDone(true); router.refresh() }
+    } finally { setLoading(false) }
+  }
+
+  if (done) {
+    return (
+      <div className="rounded-[12px] p-3 flex items-center gap-2" style={{ background: dark ? 'rgba(239,68,68,0.1)' : '#FEF2F2', border: dark ? '1px solid rgba(239,68,68,0.2)' : '1px solid #FECACA' }}>
+        <AlertTriangle size={14} className="text-red-500 shrink-0" />
+        <p className="text-xs font-semibold text-red-600">Problème signalé — notre équipe va vous contacter.</p>
+      </div>
+    )
+  }
+
+  if (confirm) {
+    return (
+      <div className="rounded-[12px] p-3 space-y-2" style={{ background: dark ? 'rgba(239,68,68,0.08)' : '#FEF2F2', border: dark ? '1px solid rgba(239,68,68,0.2)' : '1px solid #FECACA' }}>
+        <p className="text-xs font-semibold text-red-600">Confirmer le signalement ?</p>
+        <div className="flex gap-2">
+          <button onClick={report} disabled={loading}
+            className="flex-1 text-xs font-bold py-2 rounded-lg bg-red-500 text-white disabled:opacity-50">
+            {loading ? 'Envoi...' : 'Oui, signaler'}
+          </button>
+          <button onClick={() => setConfirm(false)}
+            className="flex-1 text-xs font-bold py-2 rounded-lg" style={{ background: dark ? 'rgba(255,255,255,0.08)' : '#F3F4F6', color: dark ? 'rgba(255,255,255,0.5)' : '#6B7280' }}>
+            Annuler
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <button onClick={() => setConfirm(true)}
+      className="flex items-center gap-1.5 text-xs font-medium w-full justify-center py-2 rounded-[10px] transition-colors"
+      style={{ color: dark ? 'rgba(255,100,100,0.7)' : '#EF4444', background: dark ? 'rgba(239,68,68,0.06)' : '#FEF2F2' }}>
+      <AlertTriangle size={12} />
+      Signaler un problème avec ce compte
+    </button>
+  )
+}
+
 // ── Expanded order content ─────────────────────────────────
 function OrderExpanded({
   order,
@@ -251,6 +308,16 @@ function OrderExpanded({
             <p className="text-[11px] text-center" style={{ color: labelColor }}>
               Expire le {formatDate(order.accountExpiry)}
             </p>
+          )}
+
+          {/* Issue report or reported badge */}
+          {order.accountIssueReported ? (
+            <div className="rounded-[12px] p-3 flex items-center gap-2" style={{ background: dark ? 'rgba(239,68,68,0.1)' : '#FEF2F2', border: dark ? '1px solid rgba(239,68,68,0.2)' : '1px solid #FECACA' }}>
+              <AlertTriangle size={14} className="text-red-500 shrink-0" />
+              <p className="text-xs font-semibold text-red-600">Problème signalé — notre équipe va vous recontacter.</p>
+            </div>
+          ) : (
+            <ReportIssueBlock orderId={order.id} dark={dark} />
           )}
         </>
       ) : (
@@ -333,6 +400,11 @@ export function ProfilDashboard({ email, orders, credentialsUnlocked }: Props) {
                           <p className="text-xs text-text-secondary">{PLAN_LABELS[order.planType]} · {formatDate(order.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          {order.accountIssueReported && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                              <AlertTriangle size={9} /> Problème
+                            </span>
+                          )}
                           <StatusBadge status={order.status} />
                           <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                             <ChevronDown size={16} className="text-text-secondary" />
@@ -452,6 +524,11 @@ export function ProfilDashboard({ email, orders, credentialsUnlocked }: Props) {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
+                          {order.accountIssueReported && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
+                              <AlertTriangle size={9} /> Problème
+                            </span>
+                          )}
                           <StatusBadge status={order.status} />
                           <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                             <ChevronDown size={16} className="text-white/30" />

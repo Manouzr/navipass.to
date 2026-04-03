@@ -62,12 +62,13 @@ export async function requireAdmin() {
 export async function getAdminStats() {
   await requireAdmin()
 
-  const [total, pending, paid, processing, delivered, revenue] = await Promise.all([
+  const [total, pending, paid, processing, delivered, issues, revenue] = await Promise.all([
     prisma.order.count(),
     prisma.order.count({ where: { status: 'PENDING' } }),
     prisma.order.count({ where: { status: 'PAID' } }),
     prisma.order.count({ where: { status: 'PROCESSING' } }),
     prisma.order.count({ where: { status: 'DELIVERED' } }),
+    prisma.order.count({ where: { accountIssueReported: true } }),
     prisma.order.aggregate({
       where: { status: { in: ['PAID', 'PROCESSING', 'DELIVERED'] } },
       _sum: { amount: true },
@@ -80,6 +81,7 @@ export async function getAdminStats() {
     paid,
     processing,
     delivered,
+    issues,
     revenue: revenue._sum.amount ?? 0,
   }
 }
@@ -127,6 +129,7 @@ export async function getAdminOrders(params: {
         status: true,
         createdAt: true,
         stripePaidAt: true,
+        accountIssueReported: true,
       },
     }),
     prisma.order.count({ where }),
@@ -178,6 +181,9 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
   const encryptedEmail = encrypt(accountEmail)
   const encryptedPassword = encrypt(accountPassword)
 
+  const currentOrder = await prisma.order.findUnique({ where: { id: orderId } })
+  const isReplacement = currentOrder?.status === 'DELIVERED'
+
   const order = await prisma.order.update({
     where: { id: orderId },
     data: {
@@ -186,6 +192,8 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
       accountPassword: encryptedPassword,
       accountExpiry: new Date(accountExpiry),
       deliveredAt: new Date(),
+      accountIssueReported: false,
+      accountIssueReportedAt: null,
     },
   })
 
@@ -216,7 +224,7 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
     await resend.emails.send({
       from: EMAIL_FROM,
       to: order.email,
-      subject: `NaviPass — votre compte est pret`,
+      subject: isReplacement ? `NaviPass — vos nouveaux identifiants` : `NaviPass — votre compte est pret`,
       html,
     })
   } catch (emailErr) {

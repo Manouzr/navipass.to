@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { LogOut, Package, Clock, CheckCircle, TrendingUp, Search, ChevronRight, Users } from 'lucide-react'
+import { LogOut, Package, Clock, CheckCircle, TrendingUp, Search, ChevronRight, Users, AlertTriangle } from 'lucide-react'
 import { requireAdmin, getAdminStats, getAdminOrders, logoutAdmin } from '@/actions/admin'
 import { Card } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -52,6 +52,25 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
       </div>
 
       <div className="p-5 space-y-5 max-w-5xl mx-auto">
+        {/* Issues alert */}
+        {stats.issues > 0 && (
+          <Link
+            href={`/admin/dashboard?status=DELIVERED`}
+            className="flex items-center gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3"
+          >
+            <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+              <AlertTriangle size={18} className="text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-red-700">
+                {stats.issues} compte{stats.issues > 1 ? 's' : ''} signalé{stats.issues > 1 ? 's' : ''} défaillant{stats.issues > 1 ? 's' : ''}
+              </p>
+              <p className="text-xs text-red-500">Cliquez pour voir les commandes concernées</p>
+            </div>
+            <ChevronRight size={16} className="text-red-400 shrink-0" />
+          </Link>
+        )}
+
         {/* KPI Cards */}
         <div className="grid grid-cols-2 gap-3">
           <KPICard
@@ -134,6 +153,11 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-bold text-accent-blue">{order.orderNumber}</span>
                       <StatusBadge status={order.status as OrderStatus} />
+                      {order.accountIssueReported && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                          <AlertTriangle size={10} /> Problème
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm font-medium text-text-primary truncate">
                       {order.firstName} {order.lastName}
