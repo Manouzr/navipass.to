@@ -1,0 +1,230 @@
+'use server'
+
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import { encrypt } from '@/lib/crypto'
+import { signAdminToken, verifyAdminToken } from '@/lib/jwt'
+import { adminLoginSchema, deliverOrderSchema } from '@/lib/validations'
+import { resend, EMAIL_FROM } from '@/lib/resend'
+import { signMagicToken } from '@/lib/jwt'
+import { getAppUrl } from '@/lib/utils'
+import { OrderDeliveredEmail } from '@/components/EmailTemplates/OrderDelivered'
+import { render } from '@react-email/components'
+import { revalidatePath } from 'next/cache'
+import type { ActionResult } from './order'
+
+export async function loginAdmin(formData: FormData): Promise<ActionResult> {
+  const raw = {
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+  }
+
+  const parsed = adminLoginSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: 'Données invalides' }
+  }
+
+  const { email, password } = parsed.data
+
+  if (
+    email !== process.env.ADMIN_EMAIL ||
+    password !== process.env.ADMIN_PASSWORD
+  ) {
+    return { success: false, error: 'Email ou mot de passe incorrect' }
+  }
+
+  const token = await signAdminToken(email)
+
+  cookies().set('admin_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 8 * 60 * 60, // 8h
+    path: '/',
+  })
+
+  redirect('/admin/dashboard')
+}
+
+export async function logoutAdmin() {
+  cookies().delete('admin_token')
+  redirect('/admin')
+}
+
+export async function requireAdmin() {
+  const token = cookies().get('admin_token')?.value
+  if (!token || !(await verifyAdminToken(token))) {
+    redirect('/admin')
+  }
+}
+
+export async function getAdminStats() {
+  await requireAdmin()
+
+  const [total, pending, paid, processing, delivered, revenue] = await Promise.all([
+    prisma.order.count(),
+    prisma.order.count({ where: { status: 'PENDING' } }),
+    prisma.order.count({ where: { status: 'PAID' } }),
+    prisma.order.count({ where: { status: 'PROCESSING' } }),
+    prisma.order.count({ where: { status: 'DELIVERED' } }),
+    prisma.order.aggregate({
+      where: { status: { in: ['PAID', 'PROCESSING', 'DELIVERED'] } },
+      _sum: { amount: true },
+    }),
+  ])
+
+  return {
+    total,
+    pending,
+    paid,
+    processing,
+    delivered,
+    revenue: revenue._sum.amount ?? 0,
+  }
+}
+
+export async function getAdminOrders(params: {
+  page?: number
+  status?: string
+  search?: string
+}) {
+  await requireAdmin()
+
+  const { page = 1, status, search } = params
+  const pageSize = 20
+  const skip = (page - 1) * pageSize
+
+  const where: Record<string, unknown> = {}
+
+  if (status && status !== 'ALL') {
+    where.status = status
+  }
+
+  if (search) {
+    where.OR = [
+      { orderNumber: { contains: search, mode: 'insensitive' } },
+      { firstName: { contains: search, mode: 'insensitive' } },
+      { lastName: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+      select: {
+        id: true,
+        orderNumber: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        planType: true,
+        amount: true,
+        status: true,
+        createdAt: true,
+        stripePaidAt: true,
+      },
+    }),
+    prisma.order.count({ where }),
+  ])
+
+  return { orders, total, pages: Math.ceil(total / pageSize) }
+}
+
+export async function getAdminOrderById(id: string) {
+  await requireAdmin()
+  return prisma.order.findUnique({ where: { id } })
+}
+
+export async function markProcessing(orderId: string): Promise<ActionResult> {
+  await requireAdmin()
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { status: 'PROCESSING' },
+  })
+
+  revalidatePath('/admin/dashboard')
+  revalidatePath(`/admin/commande/${orderId}`)
+
+  return { success: true, data: undefined }
+}
+
+export async function deliverOrder(formData: FormData): Promise<ActionResult> {
+  await requireAdmin()
+
+  const raw = {
+    orderId: formData.get('orderId') as string,
+    accountEmail: formData.get('accountEmail') as string,
+    accountPassword: formData.get('accountPassword') as string,
+    accountExpiry: formData.get('accountExpiry') as string,
+  }
+
+  const parsed = deliverOrderSchema.safeParse(raw)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Données invalides',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    }
+  }
+
+  const { orderId, accountEmail, accountPassword, accountExpiry } = parsed.data
+
+  const encryptedEmail = encrypt(accountEmail)
+  const encryptedPassword = encrypt(accountPassword)
+
+  const order = await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      status: 'DELIVERED',
+      accountEmail: encryptedEmail,
+      accountPassword: encryptedPassword,
+      accountExpiry: new Date(accountExpiry),
+      deliveredAt: new Date(),
+    },
+  })
+
+  // Generate fresh magic token
+  const token = await signMagicToken(order.orderNumber)
+  const expiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { magicToken: token, magicTokenExpiry: expiry },
+  })
+
+  const appUrl = getAppUrl()
+  const magicUrl = `${appUrl}/suivi/${token}`
+
+  try {
+    const html = await render(
+      OrderDeliveredEmail({
+        orderNumber: order.orderNumber,
+        firstName: order.firstName,
+        accountEmail,
+        accountPassword,
+        accountExpiry: new Date(accountExpiry),
+        magicUrl,
+      })
+    )
+
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: order.email,
+      subject: `Votre compte Navigo est prêt ! 🎉`,
+      html,
+    })
+  } catch (emailErr) {
+    console.error('Failed to send delivery email:', emailErr)
+  }
+
+  revalidatePath('/admin/dashboard')
+  revalidatePath(`/admin/commande/${orderId}`)
+
+  return { success: true, data: undefined }
+}

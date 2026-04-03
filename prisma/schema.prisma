@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  DELIVERED
+}
+
+enum PlanType {
+  WEEK
+  MONTH
+  YEAR
+}
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique // Format NAV-XXXXXX
+
+  // Infos client
+  firstName   String
+  lastName    String
+  email       String
+  dateOfBirth DateTime
+  photoUrl    String
+
+  // Commande
+  planType PlanType
+  amount   Int // Montant en centimes
+  status   OrderStatus @default(PENDING)
+
+  // Stripe
+  stripeSessionId String?   @unique
+  stripePaidAt    DateTime?
+
+  // Identifiants du compte IDF (chiffrés AES-256 en base)
+  accountEmail    String?
+  accountPassword String?
+  accountExpiry   DateTime?
+
+  // Auth
+  magicToken       String?   @unique
+  magicTokenExpiry DateTime?
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deliveredAt DateTime?
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
