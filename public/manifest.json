@@ -1,18 +1,61 @@
 {
-  "name": "NaviPass",
+  "name": "NaviPass — Pass Navigo en ligne",
   "short_name": "NaviPass",
-  "description": "Commandez votre passe Navigo en ligne",
+  "description": "Commandez votre passe Navigo IDF Mobilités en ligne. Simple, rapide et sécurisé.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0A1628",
-  "theme_color": "#4BAFD4",
-  "orientation": "portrait",
+  "theme_color": "#0A1628",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "categories": ["utilities", "travel"],
   "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Commander un pass",
+      "short_name": "Commander",
+      "description": "Commandez votre pass Navigo",
+      "url": "/commander",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Suivre ma commande",
+      "short_name": "Suivi",
+      "description": "Suivez l'état de votre commande",
+      "url": "/suivi",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

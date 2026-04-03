@@ -1,13 +1,13 @@
 import {
   Body,
-  Button,
   Container,
   Head,
-  Heading,
   Html,
   Preview,
   Section,
   Text,
+  Hr,
+  Link,
 } from '@react-email/components'
 
 interface Props {
@@ -15,64 +15,92 @@ interface Props {
   magicUrl: string
 }
 
+const font = 'Arial, Helvetica, sans-serif'
+const blue = '#0077B6'
+const dark = '#1A1A2E'
+const grey = '#6B7280'
+const border = '#E5E7EB'
+
 export function MagicLinkEmail({ orderNumber, magicUrl }: Props) {
   return (
-    <Html>
-      <Head />
-      <Preview>Accédez à votre commande NaviPass — {orderNumber}</Preview>
-      <Body style={{ backgroundColor: '#F2F2F7', fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <Container style={{ maxWidth: '520px', margin: '40px auto', padding: '0 20px' }}>
-          <Section style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{
-              display: 'inline-block',
-              background: 'linear-gradient(135deg, #0077B6, #48CAE4)',
-              borderRadius: '16px',
-              padding: '12px 24px',
-            }}>
-              <Heading style={{ color: 'white', margin: 0, fontSize: '20px', fontWeight: '800' }}>
-                NaviPass
-              </Heading>
-            </div>
-          </Section>
+    <Html lang="fr">
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
+      <Preview>Acces a votre commande {orderNumber} — lien valable 24 heures</Preview>
+      <Body style={{ backgroundColor: '#F9FAFB', fontFamily: font, margin: 0, padding: 0 }}>
+        <Container style={{ maxWidth: '560px', margin: '32px auto', padding: '0 16px' }}>
 
-          <Section style={{
-            background: 'white',
-            borderRadius: '20px',
-            padding: '32px',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          }}>
-            <Heading style={{ fontSize: '20px', color: '#1A1A2E', marginTop: 0 }}>
-              Votre lien de connexion 🔑
-            </Heading>
-            <Text style={{ color: '#6B7280', lineHeight: '1.6' }}>
-              Vous avez demandé à accéder à votre commande <strong style={{ color: '#1A1A2E' }}>{orderNumber}</strong>.
-            </Text>
-            <Text style={{ color: '#6B7280', lineHeight: '1.6' }}>
-              Cliquez sur le bouton ci-dessous pour accéder à votre espace. Ce lien est valable <strong>24 heures</strong>.
-            </Text>
-
-            <Button
-              href={magicUrl}
-              style={{
-                display: 'block',
-                background: '#E63946',
-                color: 'white',
-                borderRadius: '9999px',
-                padding: '14px 28px',
-                textAlign: 'center',
-                fontWeight: '600',
-                fontSize: '15px',
-                textDecoration: 'none',
-                marginTop: '24px',
-              }}
-            >
-              Accéder à ma commande →
-            </Button>
-
-            <Text style={{ color: '#9CA3AF', fontSize: '12px', marginTop: '20px', lineHeight: '1.5' }}>
-              Si vous n&apos;avez pas demandé cet accès, ignorez cet email.
+          {/* Logo */}
+          <Section style={{ paddingBottom: '20px' }}>
+            <Text style={{ fontSize: '18px', fontWeight: '700', color: blue, margin: 0, fontFamily: font }}>
+              NaviPass
             </Text>
           </Section>
+
+          {/* Main card */}
+          <Section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: `1px solid ${border}`, padding: '32px 32px 24px' }}>
+
+            <Text style={{ fontSize: '16px', fontWeight: '700', color: dark, margin: '0 0 8px 0', fontFamily: font }}>
+              Acces a votre espace
+            </Text>
+            <Text style={{ fontSize: '14px', color: grey, lineHeight: '1.7', margin: '0 0 8px 0', fontFamily: font }}>
+              Vous avez demande a acceder a votre commande <strong style={{ color: dark }}>{orderNumber}</strong>.
+            </Text>
+            <Text style={{ fontSize: '14px', color: grey, lineHeight: '1.7', margin: '0 0 24px 0', fontFamily: font }}>
+              Cliquez sur le bouton ci-dessous pour consulter votre commande. Ce lien est valable <strong style={{ color: dark }}>24 heures</strong>.
+            </Text>
+
+            <Hr style={{ borderTop: `1px solid ${border}`, margin: '0 0 24px 0' }} />
+
+            {/* CTA */}
+            <table width="100%" cellPadding="0" cellSpacing="0">
+              <tbody>
+                <tr>
+                  <td align="center">
+                    <Link
+                      href={magicUrl}
+                      style={{
+                        display: 'inline-block',
+                        backgroundColor: blue,
+                        color: '#ffffff',
+                        fontFamily: font,
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        textDecoration: 'none',
+                        borderRadius: '6px',
+                        padding: '12px 28px',
+                      }}
+                    >
+                      Acceder a ma commande
+                    </Link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <Text style={{ fontSize: '12px', color: '#9CA3AF', textAlign: 'center', margin: '16px 0 0 0', fontFamily: font }}>
+              Lien direct :{' '}
+              <Link href={magicUrl} style={{ color: blue, wordBreak: 'break-all' }}>{magicUrl}</Link>
+            </Text>
+
+            <Hr style={{ borderTop: `1px solid ${border}`, margin: '20px 0 0 0' }} />
+
+            <Text style={{ fontSize: '12px', color: '#9CA3AF', margin: '16px 0 0 0', lineHeight: '1.6', fontFamily: font }}>
+              Si vous n avez pas effectue cette demande, ignorez simplement cet email. Votre compte reste securise.
+            </Text>
+          </Section>
+
+          {/* Footer */}
+          <Section style={{ padding: '20px 0' }}>
+            <Hr style={{ borderTop: `1px solid ${border}`, margin: '0 0 16px 0' }} />
+            <Text style={{ fontSize: '11px', color: '#9CA3AF', textAlign: 'center', lineHeight: '1.6', margin: 0, fontFamily: font }}>
+              NaviPass — navipass.to{'\n'}
+              Commande {orderNumber}
+            </Text>
+          </Section>
+
         </Container>
       </Body>
     </Html>

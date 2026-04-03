@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { verifyProfilToken } from '@/lib/jwt'
+import { verifyProfilToken, verifyCredentialsToken } from '@/lib/jwt'
 import { prisma } from '@/lib/prisma'
 import { decrypt } from '@/lib/crypto'
 import { ProfilLoginPage } from '@/components/ProfilLoginPage'
@@ -15,18 +15,23 @@ export default async function ProfilPage() {
     return <ProfilLoginPage />
   }
 
+  // Vérifier si les identifiants sont déverrouillés
+  const credToken = cookies().get('credentials_unlocked')?.value
+  const credEmail = credToken ? await verifyCredentialsToken(credToken) : null
+  const credentialsUnlocked = credEmail?.toLowerCase() === email.toLowerCase()
+
   // Récupérer toutes les commandes de cet email
   const orders = await prisma.order.findMany({
     where: { email: { equals: email, mode: 'insensitive' } },
     orderBy: { createdAt: 'desc' },
   })
 
-  // Déchiffrer les identifiants pour les commandes livrées
+  // Déchiffrer les identifiants uniquement si la session est déverrouillée
   const ordersWithCredentials = orders.map((order) => {
     let accountEmail: string | null = null
     let accountPassword: string | null = null
 
-    if (order.status === 'DELIVERED' && order.accountEmail && order.accountPassword) {
+    if (credentialsUnlocked && order.status === 'DELIVERED' && order.accountEmail && order.accountPassword) {
       try {
         accountEmail = decrypt(order.accountEmail)
         accountPassword = decrypt(order.accountPassword)
@@ -47,5 +52,11 @@ export default async function ProfilPage() {
     }
   })
 
-  return <ProfilDashboard email={email} orders={ordersWithCredentials} />
+  return (
+    <ProfilDashboard
+      email={email}
+      orders={ordersWithCredentials}
+      credentialsUnlocked={credentialsUnlocked}
+    />
+  )
 }

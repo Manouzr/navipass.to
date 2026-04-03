@@ -3,6 +3,7 @@ import './globals.css'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { DesktopNav } from '@/components/DesktopNav'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
+import { InstallPrompt } from '@/components/InstallPrompt'
 
 export const metadata: Metadata = {
   title: 'NaviPass — Votre passe Navigo en ligne',
@@ -12,8 +13,15 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'NaviPass',
+    startupImage: '/icons/apple-touch-icon.png',
   },
-  icons: { apple: '/icons/icon-192.png' },
+  icons: {
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  },
 }
 
 export const viewport: Viewport = {
@@ -30,14 +38,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="NaviPass" />
+        <meta name="application-name" content="NaviPass" />
         <meta name="theme-color" content="#0A1628" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
       </head>
       <body className="min-h-screen bg-[#F2F2F2] lg:bg-[#0A1628]">
         <ServiceWorkerRegistration />
 
         {/* ── Desktop nav (hidden on mobile) ── */}
         <DesktopNav />
+
+        {/* ── PWA install prompt (mobile only) ── */}
+        <InstallPrompt />
 
         {/* ── Mobile: centered max-w-[430px] container ── */}
         <div className="lg:hidden flex justify-center bg-[#F2F2F2] min-h-screen">

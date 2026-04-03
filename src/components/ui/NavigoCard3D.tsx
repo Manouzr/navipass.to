@@ -76,6 +76,7 @@ export function NavigoCard3D({
           rotateX,
           rotateY,
           transformStyle: 'preserve-3d',
+          borderRadius: '8%',
         }}
         animate={
           !isHovered && floating
@@ -98,8 +99,13 @@ export function NavigoCard3D({
       >
         {/* ── Card SVG ── */}
         <div
-          className="relative w-full card-sheen"
-          style={{ aspectRatio: '429.82 / 677.79' }}
+          className="relative w-full"
+          style={{
+            aspectRatio: '429.82 / 677.79',
+            borderRadius: '8%',
+            clipPath: 'inset(0 round 8%)',
+            overflow: 'hidden',
+          }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -112,7 +118,7 @@ export function NavigoCard3D({
 
           {/* Holographic sheen overlay */}
           <motion.div
-            className="absolute inset-0 pointer-events-none rounded-[8%]"
+            className="absolute inset-0 pointer-events-none"
             style={{
               background: useTransform(
                 [sheenX, sheenY],

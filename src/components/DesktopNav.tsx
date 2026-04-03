@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: '/commander', label: 'Commander' },
   { href: '/suivi', label: 'Suivi' },
   { href: '/profil', label: 'Profil' },
+  { href: '/affilier', label: 'Devenir affilié' },
 ]
 
 export function DesktopNav() {

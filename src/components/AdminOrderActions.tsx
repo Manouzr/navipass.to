@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { OrderStatus } from '@prisma/client'
 import { Card } from '@/components/ui/Card'
 import { CTAButton } from '@/components/ui/CTAButton'
 import { RoundedInput } from '@/components/ui/RoundedInput'
-import { markProcessing, deliverOrder } from '@/actions/admin'
-import { Mail, Lock, Calendar, Send, Loader2 } from 'lucide-react'
+import { markProcessing, deliverOrder, deleteOrder } from '@/actions/admin'
+import { Mail, Lock, Calendar, Send, Trash2 } from 'lucide-react'
 
 interface Props {
   order: {
@@ -17,10 +18,12 @@ interface Props {
 }
 
 export function AdminOrderActions({ order }: Props) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const [accountEmail, setAccountEmail] = useState('')
   const [accountPassword, setAccountPassword] = useState('')
@@ -59,10 +62,51 @@ export function AdminOrderActions({ order }: Props) {
     setLoading(false)
   }
 
+  async function handleDelete() {
+    setLoading(true)
+    const result = await deleteOrder(order.id)
+    if (!result.success) { setError(result.error); setLoading(false); return }
+    router.push('/admin/dashboard')
+  }
+
+  const deleteBlock = (
+    <div className="mt-4 pt-4 border-t border-[#F3F4F6]">
+      {!confirmDelete ? (
+        <button
+          onClick={() => setConfirmDelete(true)}
+          className="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 transition-colors"
+        >
+          <Trash2 size={15} /> Supprimer la commande
+        </button>
+      ) : (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-2">
+          <p className="text-sm font-semibold text-red-700">Confirmer la suppression ?</p>
+          <p className="text-xs text-red-500">Cette action est irréversible.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className="flex-1 bg-red-600 text-white text-sm font-semibold rounded-lg py-2 hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Suppression...' : 'Oui, supprimer'}
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="flex-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg py-2 hover:bg-gray-200 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
   if (order.status === 'DELIVERED') {
     return (
       <Card padding="md" className="bg-green-50 border border-green-200">
         <p className="text-sm font-semibold text-green-800 text-center">✓ Commande livrée</p>
+        {deleteBlock}
       </Card>
     )
   }
@@ -134,6 +178,7 @@ export function AdminOrderActions({ order }: Props) {
           </CTAButton>
         </form>
       )}
+      {deleteBlock}
     </Card>
   )
 }

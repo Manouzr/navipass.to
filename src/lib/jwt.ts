@@ -64,3 +64,44 @@ export async function verifyProfilToken(token: string): Promise<string | null> {
     return null
   }
 }
+
+export async function signOtpChallenge(email: string, otp: string): Promise<string> {
+  return new SignJWT({ email, otp, type: 'otp_challenge' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('10m')
+    .sign(getSecret())
+}
+
+export async function verifyOtpChallenge(token: string, otp: string, email: string): Promise<boolean> {
+  try {
+    const { payload } = await jwtVerify(token, getSecret())
+    return (
+      payload.type === 'otp_challenge' &&
+      typeof payload.otp === 'string' &&
+      payload.otp === otp &&
+      typeof payload.email === 'string' &&
+      payload.email.toLowerCase() === email.toLowerCase()
+    )
+  } catch {
+    return false
+  }
+}
+
+export async function signCredentialsToken(email: string): Promise<string> {
+  return new SignJWT({ email, type: 'credentials' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('1h')
+    .sign(getSecret())
+}
+
+export async function verifyCredentialsToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, getSecret())
+    if (payload.type !== 'credentials' || typeof payload.email !== 'string') return null
+    return payload.email
+  } catch {
+    return null
+  }
+}

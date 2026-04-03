@@ -31,6 +31,7 @@ export async function createOrderAction(formData: FormData): Promise<ActionResul
   }
 
   const { planType, firstName, lastName, email, dateOfBirth, photoUrl } = parsed.data
+  const affiliateCode = (formData.get('affiliateCode') as string) || null
 
   let orderNumber: string
   let attempts = 0
@@ -53,6 +54,7 @@ export async function createOrderAction(formData: FormData): Promise<ActionResul
       planType: planType as PlanType,
       amount,
       status: 'PENDING',
+      affiliateCode,
     },
   })
 
@@ -77,6 +79,7 @@ export async function createOrderAction(formData: FormData): Promise<ActionResul
     metadata: {
       orderId: order.id,
       orderNumber,
+      ...(affiliateCode ? { affiliateCode } : {}),
     },
   })
 

@@ -216,7 +216,7 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
     await resend.emails.send({
       from: EMAIL_FROM,
       to: order.email,
-      subject: `Votre compte Navigo est prêt ! 🎉`,
+      subject: `NaviPass — votre compte est pret`,
       html,
     })
   } catch (emailErr) {
@@ -226,5 +226,13 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
   revalidatePath('/admin/dashboard')
   revalidatePath(`/admin/commande/${orderId}`)
 
+  return { success: true, data: undefined }
+}
+
+export async function deleteOrder(orderId: string): Promise<ActionResult> {
+  await requireAdmin()
+  await prisma.affiliateReferral.deleteMany({ where: { orderId } })
+  await prisma.order.delete({ where: { id: orderId } })
+  revalidatePath('/admin/dashboard')
   return { success: true, data: undefined }
 }

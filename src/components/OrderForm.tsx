@@ -27,6 +27,7 @@ export function OrderForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const defaultPlan = searchParams.get('plan') ?? 'MONTH'
+  const refCode = searchParams.get('ref') ?? ''
 
   const [step, setStep] = useState<Step>(1)
   const [direction, setDirection] = useState(1)
@@ -89,6 +90,7 @@ export function OrderForm() {
     fd.append('email', email)
     fd.append('dateOfBirth', dateOfBirth)
     fd.append('photoUrl', photoUrl)
+    if (refCode) fd.append('affiliateCode', refCode)
     const result = await createOrderAction(fd)
     if (!result.success) {
       setError(result.error)

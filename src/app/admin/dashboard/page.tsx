@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { LogOut, Package, Clock, CheckCircle, TrendingUp, Search, ChevronRight } from 'lucide-react'
+import { LogOut, Package, Clock, CheckCircle, TrendingUp, Search, ChevronRight, Users } from 'lucide-react'
 import { requireAdmin, getAdminStats, getAdminOrders, logoutAdmin } from '@/actions/admin'
 import { Card } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -31,15 +31,24 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
           <h1 className="text-xl font-bold text-text-primary">NaviPass Admin</h1>
           <p className="text-xs text-text-secondary">Dashboard</p>
         </div>
-        <form action={logoutAdmin}>
-          <button
-            type="submit"
-            className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent-cta transition-colors"
+        <div className="flex items-center gap-4">
+          <Link
+            href="/admin/affilies"
+            className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-accent-cta transition-colors"
           >
-            <LogOut size={16} />
-            Déconnexion
-          </button>
-        </form>
+            <Users size={16} />
+            Affiliés
+          </Link>
+          <form action={logoutAdmin}>
+            <button
+              type="submit"
+              className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent-cta transition-colors"
+            >
+              <LogOut size={16} />
+              Déconnexion
+            </button>
+          </form>
+        </div>
       </div>
 
       <div className="p-5 space-y-5 max-w-5xl mx-auto">

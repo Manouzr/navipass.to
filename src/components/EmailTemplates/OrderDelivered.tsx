@@ -1,16 +1,13 @@
 import {
   Body,
-  Button,
   Container,
   Head,
-  Heading,
-  Hr,
   Html,
   Preview,
   Section,
   Text,
-  Row,
-  Column,
+  Hr,
+  Link,
 } from '@react-email/components'
 import { formatDate } from '@/lib/utils'
 
@@ -23,6 +20,13 @@ interface Props {
   magicUrl: string
 }
 
+const font = 'Arial, Helvetica, sans-serif'
+const blue = '#0077B6'
+const dark = '#1A1A2E'
+const grey = '#6B7280'
+const lightGrey = '#F3F4F6'
+const border = '#E5E7EB'
+
 export function OrderDeliveredEmail({
   orderNumber,
   firstName,
@@ -32,110 +36,123 @@ export function OrderDeliveredEmail({
   magicUrl,
 }: Props) {
   return (
-    <Html>
-      <Head />
-      <Preview>Votre compte Navigo est prêt ! 🎉 — NaviPass</Preview>
-      <Body style={{ backgroundColor: '#F2F2F7', fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <Container style={{ maxWidth: '520px', margin: '40px auto', padding: '0 20px' }}>
-          {/* Header */}
-          <Section style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{
-              display: 'inline-block',
-              background: 'linear-gradient(135deg, #0077B6, #48CAE4)',
-              borderRadius: '16px',
-              padding: '12px 24px',
-            }}>
-              <Heading style={{ color: 'white', margin: 0, fontSize: '20px', fontWeight: '800' }}>
-                NaviPass
-              </Heading>
-            </div>
+    <Html lang="fr">
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
+      <Preview>Votre compte IDF Mobilités est pret — commande {orderNumber}</Preview>
+      <Body style={{ backgroundColor: '#F9FAFB', fontFamily: font, margin: 0, padding: 0 }}>
+        <Container style={{ maxWidth: '560px', margin: '32px auto', padding: '0 16px' }}>
+
+          {/* Logo */}
+          <Section style={{ paddingBottom: '20px' }}>
+            <Text style={{ fontSize: '18px', fontWeight: '700', color: blue, margin: 0, fontFamily: font }}>
+              NaviPass
+            </Text>
           </Section>
 
-          {/* Card */}
-          <Section style={{
-            background: 'white',
-            borderRadius: '20px',
-            padding: '32px',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          }}>
-            <Heading style={{ fontSize: '22px', color: '#1A1A2E', marginTop: 0 }}>
-              Votre compte est prêt {firstName} 🎉
-            </Heading>
-            <Text style={{ color: '#6B7280', lineHeight: '1.6' }}>
-              Voici vos identifiants pour accéder à votre espace IDF Mobilités.
+          {/* Main card */}
+          <Section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: `1px solid ${border}`, padding: '32px 32px 24px' }}>
+
+            <Text style={{ fontSize: '16px', fontWeight: '700', color: dark, margin: '0 0 8px 0', fontFamily: font }}>
+              Bonjour {firstName},
+            </Text>
+            <Text style={{ fontSize: '14px', color: grey, lineHeight: '1.7', margin: '0 0 24px 0', fontFamily: font }}>
+              Votre compte IDF Mobilités est actif. Vous pouvez des maintenant utiliser
+              les transports en commun d Ile-de-France (metro, RER, bus, tramway) avec votre pass Navigo.
             </Text>
 
-            {/* Fake Navigo card */}
-            <Section style={{
-              background: 'linear-gradient(135deg, #0077B6 0%, #00A3E0 50%, #48CAE4 100%)',
-              borderRadius: '16px',
-              padding: '20px 24px',
-              margin: '20px 0',
-            }}>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px 0' }}>
-                île-de-france mobilités
-              </Text>
-              <Text style={{ color: 'white', fontSize: '18px', fontWeight: '700', margin: '0 0 4px 0' }}>
-                Pass Navigo
-              </Text>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0 }}>
-                Expire le {formatDate(accountExpiry)}
-              </Text>
-            </Section>
+            <Hr style={{ borderTop: `1px solid ${border}`, margin: '0 0 20px 0' }} />
 
-            <Hr style={{ borderColor: '#E5E7EB', margin: '20px 0' }} />
-
-            {/* Credentials */}
-            <Row>
-              <Column>
-                <Text style={{ fontSize: '11px', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
-                  Email
-                </Text>
-                <Text style={{ fontSize: '15px', fontWeight: '700', color: '#0077B6', margin: '0 0 16px 0', fontFamily: 'monospace' }}>
-                  {accountEmail}
-                </Text>
-              </Column>
-            </Row>
-
-            <Row>
-              <Column>
-                <Text style={{ fontSize: '11px', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
-                  Mot de passe
-                </Text>
-                <Text style={{ fontSize: '15px', fontWeight: '700', color: '#0077B6', margin: 0, fontFamily: 'monospace' }}>
-                  {accountPassword}
-                </Text>
-              </Column>
-            </Row>
-
-            <Hr style={{ borderColor: '#E5E7EB', margin: '24px 0' }} />
-
-            <Text style={{ color: '#6B7280', fontSize: '13px', lineHeight: '1.6' }}>
-              Conservez cet email précieusement. Vous pouvez également retrouver vos identifiants à tout moment via votre espace NaviPass.
+            {/* Credentials block */}
+            <Text style={{ fontSize: '13px', fontWeight: '700', color: dark, margin: '0 0 12px 0', fontFamily: font }}>
+              Identifiants de connexion IDF Mobilites
             </Text>
 
-            <Button
-              href={magicUrl}
-              style={{
-                display: 'block',
-                background: '#0077B6',
-                color: 'white',
-                borderRadius: '9999px',
-                padding: '14px 28px',
-                textAlign: 'center',
-                fontWeight: '600',
-                fontSize: '15px',
-                textDecoration: 'none',
-                marginTop: '20px',
-              }}
-            >
-              Accéder à mon espace →
-            </Button>
+            <table width="100%" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ backgroundColor: lightGrey, borderRadius: '6px', padding: '14px 16px', marginBottom: '8px', display: 'block' }}>
+                    <Text style={{ fontSize: '11px', color: grey, margin: '0 0 4px 0', fontFamily: font, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Adresse email
+                    </Text>
+                    <Text style={{ fontSize: '14px', fontWeight: '700', color: blue, margin: 0, fontFamily: 'Courier New, monospace' }}>
+                      {accountEmail}
+                    </Text>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <table width="100%" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', marginTop: '8px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ backgroundColor: lightGrey, borderRadius: '6px', padding: '14px 16px', display: 'block' }}>
+                    <Text style={{ fontSize: '11px', color: grey, margin: '0 0 4px 0', fontFamily: font, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Code d acces
+                    </Text>
+                    <Text style={{ fontSize: '14px', fontWeight: '700', color: blue, margin: 0, fontFamily: 'Courier New, monospace', letterSpacing: '0.1em' }}>
+                      {accountPassword}
+                    </Text>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <Text style={{ fontSize: '12px', color: grey, margin: '12px 0 0 0', fontFamily: font }}>
+              Validite du compte : jusqu au {formatDate(accountExpiry)}
+            </Text>
+
+            <Hr style={{ borderTop: `1px solid ${border}`, margin: '20px 0' }} />
+
+            <Text style={{ fontSize: '14px', color: grey, lineHeight: '1.7', margin: '0 0 20px 0', fontFamily: font }}>
+              Conservez cet email. Vous pouvez egalement retrouver ces informations a tout moment
+              dans votre espace personnel NaviPass.
+            </Text>
+
+            {/* CTA */}
+            <table width="100%" cellPadding="0" cellSpacing="0">
+              <tbody>
+                <tr>
+                  <td align="center">
+                    <Link
+                      href={magicUrl}
+                      style={{
+                        display: 'inline-block',
+                        backgroundColor: blue,
+                        color: '#ffffff',
+                        fontFamily: font,
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        textDecoration: 'none',
+                        borderRadius: '6px',
+                        padding: '12px 28px',
+                      }}
+                    >
+                      Acceder a mon espace NaviPass
+                    </Link>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <Text style={{ fontSize: '12px', color: '#9CA3AF', textAlign: 'center', margin: '16px 0 0 0', fontFamily: font }}>
+              Lien direct :{' '}
+              <Link href={magicUrl} style={{ color: blue, wordBreak: 'break-all' }}>{magicUrl}</Link>
+            </Text>
           </Section>
 
-          <Text style={{ color: '#9CA3AF', fontSize: '12px', textAlign: 'center', marginTop: '24px' }}>
-            Commande {orderNumber} · NaviPass
-          </Text>
+          {/* Footer */}
+          <Section style={{ padding: '20px 0' }}>
+            <Hr style={{ borderTop: `1px solid ${border}`, margin: '0 0 16px 0' }} />
+            <Text style={{ fontSize: '11px', color: '#9CA3AF', textAlign: 'center', lineHeight: '1.6', margin: 0, fontFamily: font }}>
+              NaviPass — navipass.to | Commande {orderNumber}{'\n'}
+              Ce compte est personnel et ne doit pas etre partage.{'\n'}
+              Pour toute question, connectez-vous a votre espace NaviPass.
+            </Text>
+          </Section>
+
         </Container>
       </Body>
     </Html>

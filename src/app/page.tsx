@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, ChevronRight, Shield, Clock, CheckCircle, Zap } from 'lucide-react'
+import { ArrowRight, ChevronRight, Shield, Clock, CheckCircle, Zap, TrendingUp } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { NavigoCard } from '@/components/ui/NavigoCard'
 import { NavigoCard3D } from '@/components/ui/NavigoCard3D'
@@ -154,6 +154,26 @@ export default function HomePage() {
           >
             <p className="text-sm font-semibold text-[#0369A1] mb-1">Service sécurisé · Réseau complet IDF</p>
             <p className="text-xs text-[#0369A1] leading-relaxed">Valable sur tout le réseau : métro, RER, bus et tramway · Paiement Stripe sécurisé · Livraison sous 48h.</p>
+          </motion.div>
+
+          {/* Affiliate CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-20px' }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Link href="/affilier" className="block rounded-[16px] p-4 hover:opacity-90 transition-opacity" style={{ background: '#0A1628', border: '1px solid rgba(75,175,212,0.3)' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-white mb-0.5">Gagne jusqu&apos;à 45€ par parrainage</p>
+                  <p className="text-xs" style={{ color: 'rgba(75,175,212,0.8)' }}>30% de commission · Deviens affilié NaviPass →</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ml-3" style={{ background: 'rgba(75,175,212,0.15)' }}>
+                  <TrendingUp size={18} style={{ color: '#4BAFD4' }} />
+                </div>
+              </div>
+            </Link>
           </motion.div>
 
           <div className="flex items-center justify-center gap-4 pb-2">
@@ -455,6 +475,55 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Affiliate CTA ────────────────────────── */}
+        <section className="bg-[#0f172a] py-20" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="max-w-5xl mx-auto px-8">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-80px' }}
+              variants={fadeUp}
+              custom={0}
+              className="rounded-[28px] p-12 flex flex-col lg:flex-row items-center justify-between gap-10"
+              style={{ background: 'rgba(75,175,212,0.07)', border: '1px solid rgba(75,175,212,0.25)' }}
+            >
+              <div>
+                <span className="text-xs font-bold tracking-[0.2em] uppercase mb-3 block" style={{ color: '#4BAFD4' }}>
+                  Programme partenaire
+                </span>
+                <h2 className="text-4xl font-black text-white mb-3">
+                  Gagne jusqu&apos;à <span className="gradient-text">45€</span> par vente
+                </h2>
+                <p className="text-white/50 text-lg max-w-md leading-relaxed">
+                  30% de commission sur chaque passe Navigo vendu via ton lien. Utilise tes gains pour payer ta propre carte.
+                </p>
+                <div className="flex gap-6 mt-6">
+                  {[
+                    { label: 'Navigo Semaine', value: '1,50€' },
+                    { label: 'Navigo Mois', value: '4,50€' },
+                    { label: 'Navigo Annuel', value: '45€' },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <p className="text-xl font-black" style={{ color: '#4BAFD4' }}>{value}</p>
+                      <p className="text-xs text-white/40 mt-0.5">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="shrink-0">
+                <Link
+                  href="/affilier"
+                  className="flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold transition-all hover:scale-105 whitespace-nowrap"
+                  style={{ background: '#4BAFD4', color: '#0A1628' }}
+                >
+                  Devenir affilié <ArrowRight size={18} />
+                </Link>
+                <p className="text-xs text-white/30 text-center mt-3">Gratuit · Sans engagement · Activé sous 24h</p>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
         {/* ── Footer strip ─────────────────────────── */}
         <section
           className="py-12 text-center"
@@ -479,6 +548,10 @@ export default function HomePage() {
             <span className="text-white/15 text-xs">·</span>
             <Link href="/cgu" className="text-white/30 hover:text-white/60 text-xs transition-colors">
               Conditions d&apos;utilisation
+            </Link>
+            <span className="text-white/15 text-xs">·</span>
+            <Link href="/affilier" className="text-white/30 hover:text-white/60 text-xs transition-colors">
+              Programme affilié
             </Link>
           </div>
         </section>

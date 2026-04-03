@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import { requireAdmin, getAdminOrderById } from '@/actions/admin'
 import { Card } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -68,12 +67,27 @@ export default async function AdminOrderDetailPage({ params }: Props) {
 
         {/* Photo */}
         <Card padding="md">
-          <h2 className="text-sm font-semibold text-text-primary mb-3">Photo d&apos;identité</h2>
-          <div className="flex justify-center">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-text-primary">Photo d&apos;identité</h2>
+            <a
+              href={order.photoUrl}
+              download={`photo-${order.orderNumber}.jpg`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors"
+              style={{ background: '#EBF6FB', color: '#0369A1' }}
+            >
+              <Download size={13} />
+              Télécharger
+            </a>
+          </div>
+          <div className="flex justify-center bg-[#F9FAFB] rounded-xl p-4 border border-border-light">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={order.photoUrl}
+              src={order.photoUrl.startsWith('/') ? order.photoUrl : order.photoUrl}
               alt="Photo identité"
-              className="max-h-64 rounded-xl object-contain border border-border-light"
+              className="max-h-72 max-w-full rounded-xl object-contain"
+              style={{ display: 'block' }}
             />
           </div>
         </Card>

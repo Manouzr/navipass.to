@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { LogOut, ChevronRight, ArrowRight } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { LogOut, ChevronDown, ArrowRight, Lock, Mail, ShieldCheck, Copy, Check } from 'lucide-react'
 import { OrderStatus, PlanType } from '@prisma/client'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { NavigoCard } from '@/components/ui/NavigoCard'
 import { NavigoCard3D } from '@/components/ui/NavigoCard3D'
-import { CredentialsCopyBlock } from '@/components/CredentialsCopyBlock'
 import { PLAN_LABELS, formatPrice, formatDate } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -29,6 +28,7 @@ interface OrderData {
 interface Props {
   email: string
   orders: OrderData[]
+  credentialsUnlocked: boolean
 }
 
 const fadeUp = {
@@ -39,18 +39,245 @@ const fadeUp = {
   }),
 }
 
-export function ProfilDashboard({ email, orders }: Props) {
+// ── Copy button ────────────────────────────────────────────
+function CopyBtn({ value, dark = false }: { value: string; dark?: boolean }) {
+  const [copied, setCopied] = useState(false)
+  function copy() {
+    navigator.clipboard.writeText(value)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+  return (
+    <button
+      onClick={copy}
+      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+      style={{ background: dark ? 'rgba(75,175,212,0.15)' : '#EBF6FB' }}
+    >
+      {copied
+        ? <Check size={13} style={{ color: '#4BAFD4' }} />
+        : <Copy size={13} style={{ color: '#4BAFD4' }} />
+      }
+    </button>
+  )
+}
+
+// ── OTP unlock inline component ────────────────────────────
+function OtpUnlockBlock({ email, dark = false }: { email: string; dark?: boolean }) {
+  const router = useRouter()
+  const [step, setStep] = useState<'idle' | 'sent'>('idle')
+  const [challengeToken, setChallengeToken] = useState<string | null>(null)
+  const [otp, setOtp] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const inputsRef = useRef<(HTMLInputElement | null)[]>([])
+
+  async function sendCode() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/profil-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send' }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error); return }
+      setChallengeToken(data.challengeToken)
+      setStep('sent')
+    } catch { setError('Erreur réseau') }
+    finally { setLoading(false) }
+  }
+
+  async function verifyCode(finalOtp: string) {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/profil-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', challengeToken, otp: finalOtp }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error); return }
+      router.refresh()
+    } catch { setError('Erreur réseau') }
+    finally { setLoading(false) }
+  }
+
+  function handleDigit(i: number, val: string) {
+    const digit = val.replace(/\D/g, '').slice(-1)
+    const arr = Array.from({ length: 6 }, (_, k) => otp[k] ?? '')
+    arr[i] = digit
+    const newOtp = arr.join('')
+    setOtp(newOtp)
+    if (digit && i < 5) inputsRef.current[i + 1]?.focus()
+    if (newOtp.replace(/\s/g, '').length === 6 && !newOtp.includes('')) {
+      verifyCode(newOtp)
+    }
+  }
+
+  function handleKeyDown(i: number, e: React.KeyboardEvent) {
+    if (e.key === 'Backspace' && !otp[i] && i > 0) {
+      inputsRef.current[i - 1]?.focus()
+      const arr = Array.from({ length: 6 }, (_, k) => otp[k] ?? '')
+      arr[i - 1] = ''
+      setOtp(arr.join(''))
+    }
+  }
+
+  const bg = dark ? 'rgba(75,175,212,0.06)' : '#F0F9FF'
+  const border = dark ? '1px solid rgba(75,175,212,0.2)' : '1px solid #BAE6FD'
+  const labelColor = dark ? 'rgba(255,255,255,0.7)' : '#0369A1'
+  const subColor = dark ? 'rgba(255,255,255,0.4)' : '#4BAFD4'
+  const inputBg = dark ? 'rgba(255,255,255,0.08)' : '#fff'
+  const inputBorder = dark ? 'rgba(255,255,255,0.15)' : '#BAE6FD'
+  const inputColor = dark ? '#fff' : '#0A1628'
+
+  return (
+    <div className="rounded-[14px] p-4" style={{ background: bg, border }}>
+      {step === 'idle' ? (
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: dark ? 'rgba(75,175,212,0.15)' : '#fff' }}>
+              <Lock size={16} style={{ color: '#4BAFD4' }} />
+            </div>
+            <div>
+              <p className="text-xs font-bold" style={{ color: labelColor }}>Identifiants protégés</p>
+              <p className="text-[11px] mt-0.5" style={{ color: subColor }}>Vérifiez votre identité par email</p>
+            </div>
+          </div>
+          <motion.button
+            onClick={sendCode}
+            disabled={loading}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold shrink-0 disabled:opacity-50"
+            style={{ background: '#4BAFD4', color: '#0A1628' }}
+          >
+            <Mail size={12} />
+            {loading ? 'Envoi...' : 'Recevoir un code'}
+          </motion.button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-xs font-bold" style={{ color: labelColor }}>
+            Code envoyé à <span style={{ color: '#4BAFD4' }}>{email}</span>
+          </p>
+          <div className="flex gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <input
+                key={i}
+                ref={(el) => { inputsRef.current[i] = el }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otp[i] ?? ''}
+                onChange={(e) => handleDigit(i, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(i, e)}
+                className="w-9 h-11 text-center text-base font-black rounded-[10px] outline-none transition-colors"
+                style={{
+                  background: inputBg,
+                  border: `1px solid ${otp[i] ? '#4BAFD4' : inputBorder}`,
+                  color: inputColor,
+                }}
+              />
+            ))}
+            {loading && (
+              <div className="flex items-center pl-2">
+                <div className="w-4 h-4 border-2 border-[#4BAFD4] border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          {error && <p className="text-[11px] text-red-500">{error}</p>}
+          <button onClick={() => { setStep('idle'); setOtp(''); setError(null) }} className="text-[11px] underline" style={{ color: subColor }}>
+            Renvoyer le code
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Expanded order content ─────────────────────────────────
+function OrderExpanded({
+  order,
+  credentialsUnlocked,
+  email,
+  dark = false,
+}: {
+  order: OrderData
+  credentialsUnlocked: boolean
+  email: string
+  dark?: boolean
+}) {
+  const labelColor = dark ? 'rgba(255,255,255,0.4)' : '#6B7280'
+  const valueColor = dark ? '#fff' : '#1A1A2E'
+  const divider = dark ? 'rgba(255,255,255,0.06)' : '#F3F4F6'
+
+  if (order.status !== 'DELIVERED') {
+    return (
+      <div className="px-4 pb-4 pt-2">
+        <div className="rounded-[12px] p-3 flex items-center gap-3" style={{ background: dark ? 'rgba(75,175,212,0.06)' : '#EBF6FB', border: dark ? '1px solid rgba(75,175,212,0.15)' : '1px solid #BAE6FD' }}>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#4BAFD4] animate-pulse shrink-0" />
+          <p className="text-xs" style={{ color: dark ? 'rgba(255,255,255,0.5)' : '#0369A1' }}>
+            Votre compte est en cours de préparation. Les identifiants apparaîtront ici dès la livraison.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="px-4 pb-4 pt-1 space-y-3">
+      {credentialsUnlocked && order.accountEmail && order.accountPassword ? (
+        <>
+          {/* Email */}
+          <div className="rounded-[12px] p-3" style={{ background: dark ? 'rgba(255,255,255,0.04)' : '#F9FAFB', border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E5E7EB' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>Email IDF Mobilités</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold truncate" style={{ color: valueColor }}>{order.accountEmail}</p>
+              <CopyBtn value={order.accountEmail} dark={dark} />
+            </div>
+          </div>
+          {/* Mot de passe */}
+          <div className="rounded-[12px] p-3" style={{ background: dark ? 'rgba(255,255,255,0.04)' : '#F9FAFB', border: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #E5E7EB' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: labelColor }}>Mot de passe</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-mono font-semibold tracking-wider" style={{ color: valueColor }}>{order.accountPassword}</p>
+              <CopyBtn value={order.accountPassword} dark={dark} />
+            </div>
+          </div>
+          {/* Expiration */}
+          {order.accountExpiry && (
+            <p className="text-[11px] text-center" style={{ color: labelColor }}>
+              Expire le {formatDate(order.accountExpiry)}
+            </p>
+          )}
+        </>
+      ) : (
+        <OtpUnlockBlock email={email} dark={dark} />
+      )}
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────
+export function ProfilDashboard({ email, orders, credentialsUnlocked }: Props) {
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
-  const [activeOrderId, setActiveOrderId] = useState<string | null>(
+  const [openOrderId, setOpenOrderId] = useState<string | null>(
     orders.find((o) => o.status === 'DELIVERED')?.id ?? orders[0]?.id ?? null
   )
 
-  const activeOrder = orders.find((o) => o.id === activeOrderId) ?? orders[0]
+  const activeOrder = orders.find((o) => o.id === openOrderId) ?? orders[0]
+
+  function toggle(id: string) {
+    setOpenOrderId((prev) => (prev === id ? null : id))
+  }
 
   async function handleLogout() {
     setLoggingOut(true)
     await fetch('/api/profil-auth', { method: 'DELETE' })
+    await fetch('/api/profil-verify', { method: 'DELETE' })
     router.refresh()
   }
 
@@ -64,78 +291,77 @@ export function ProfilDashboard({ email, orders }: Props) {
 
         <div className="px-5 pt-4 pb-8 space-y-5">
 
-          {/* Carte active */}
+          {/* Carte de la commande ouverte */}
           {activeOrder && (
-            <>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
-                className="flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-xs text-text-secondary">Forfait actif</p>
-                  <p className="text-sm font-bold text-text-primary">{PLAN_LABELS[activeOrder.planType]}</p>
-                </div>
-                <StatusBadge status={activeOrder.status} />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 280, damping: 24, delay: 0.12 }}
-                className="flex justify-center"
-              >
-                <NavigoCard
-                  status={activeOrder.status}
-                  accountEmail={activeOrder.accountEmail}
-                  accountExpiry={activeOrder.accountExpiry}
-                  className="max-w-[240px]"
-                />
-              </motion.div>
-
-              {activeOrder.status === 'DELIVERED' && activeOrder.accountEmail && activeOrder.accountPassword && (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-                >
-                  <CredentialsCopyBlock
-                    accountEmail={activeOrder.accountEmail}
-                    accountPassword={activeOrder.accountPassword}
-                    accountExpiry={activeOrder.accountExpiry}
-                  />
-                </motion.div>
-              )}
-            </>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 24, delay: 0.1 }}
+              className="flex justify-center"
+            >
+              <NavigoCard
+                status={activeOrder.status}
+                accountEmail={activeOrder.accountEmail}
+                accountExpiry={activeOrder.accountExpiry}
+                className="max-w-[230px]"
+              />
+            </motion.div>
           )}
 
-          {/* Mes commandes */}
+          {/* Mes commandes — accordion */}
           {orders.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
             >
               <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2 pl-1">Mes commandes</p>
               <div className="bg-white rounded-[16px] border border-[#E5E7EB] overflow-hidden">
-                {orders.map((order, i) => (
-                  <motion.button
-                    key={order.id}
-                    onClick={() => setActiveOrderId(order.id)}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.3 + i * 0.07 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors ${i < orders.length - 1 ? 'border-b border-[#F3F4F6]' : ''} ${activeOrderId === order.id ? 'bg-[#EBF6FB]' : 'hover:bg-[#F9FAFB]'}`}
-                  >
-                    <div>
-                      <p className="text-sm font-bold text-text-primary">{order.orderNumber}</p>
-                      <p className="text-xs text-text-secondary">{PLAN_LABELS[order.planType]} · {formatDate(order.createdAt)}</p>
+                {orders.map((order, i) => {
+                  const isOpen = openOrderId === order.id
+                  return (
+                    <div key={order.id} style={{ borderBottom: i < orders.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                      {/* Header row */}
+                      <motion.button
+                        onClick={() => toggle(order.id)}
+                        whileTap={{ scale: 0.99 }}
+                        className="w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors"
+                        style={{ background: isOpen ? '#EBF6FB' : 'transparent' }}
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-text-primary">{order.orderNumber}</p>
+                          <p className="text-xs text-text-secondary">{PLAN_LABELS[order.planType]} · {formatDate(order.createdAt)}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <StatusBadge status={order.status} />
+                          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                            <ChevronDown size={16} className="text-text-secondary" />
+                          </motion.div>
+                        </div>
+                      </motion.button>
+
+                      {/* Expanded content */}
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                            style={{ overflow: 'hidden' }}
+                          >
+                            <OrderExpanded
+                              order={order}
+                              credentialsUnlocked={credentialsUnlocked}
+                              email={email}
+                              dark={false}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <StatusBadge status={order.status} />
-                  </motion.button>
-                ))}
+                  )
+                })}
               </div>
             </motion.div>
           )}
@@ -146,9 +372,9 @@ export function ProfilDashboard({ email, orders }: Props) {
             disabled={loggingOut}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.35 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
             whileTap={{ scale: 0.97 }}
-            className="w-full rounded-full py-4 text-base font-semibold flex items-center justify-center gap-2 transition-all"
+            className="w-full rounded-full py-4 text-base font-semibold flex items-center justify-center gap-2"
             style={{ background: '#F3F4F6', color: '#6B7280' }}
           >
             <LogOut size={18} />
@@ -184,89 +410,81 @@ export function ProfilDashboard({ email, orders }: Props) {
             </motion.button>
           </motion.div>
 
-          <div className="grid lg:grid-cols-[1fr_320px] gap-10">
+          <div className="grid lg:grid-cols-[1fr_300px] gap-10">
 
             {/* Main */}
-            <div className="space-y-6">
+            <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1}
+              className="rounded-[20px] overflow-hidden"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <p className="text-xs font-bold text-[#4BAFD4] uppercase tracking-wider">Mes commandes</p>
+              </div>
 
-              {/* Identifiants si livré */}
-              {activeOrder?.status === 'DELIVERED' && activeOrder.accountEmail && activeOrder.accountPassword && (
-                <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1}>
-                  <CredentialsCopyBlock
-                    accountEmail={activeOrder.accountEmail}
-                    accountPassword={activeOrder.accountPassword}
-                    accountExpiry={activeOrder.accountExpiry}
-                  />
-                </motion.div>
-              )}
-
-              {/* Commandes */}
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={fadeUp}
-                custom={2}
-                className="rounded-[20px] overflow-hidden"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-              >
-                <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p className="text-xs font-bold text-[#4BAFD4] uppercase tracking-wider">Mes commandes</p>
+              {orders.length === 0 ? (
+                <div className="px-6 py-10 text-center">
+                  <p className="text-white/40 text-sm">Aucune commande trouvée.</p>
+                  <Link href="/commander" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#4BAFD4]">
+                    Commander un pass <ArrowRight size={14} />
+                  </Link>
                 </div>
-                {orders.length === 0 ? (
-                  <div className="px-6 py-10 text-center">
-                    <p className="text-white/40 text-sm">Aucune commande trouvée.</p>
-                    <Link href="/commander" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#4BAFD4]">
-                      Commander un pass <ArrowRight size={14} />
-                    </Link>
-                  </div>
-                ) : (
-                  orders.map((order, i) => (
-                    <motion.button
+              ) : (
+                orders.map((order, i) => {
+                  const isOpen = openOrderId === order.id
+                  return (
+                    <div
                       key={order.id}
-                      onClick={() => setActiveOrderId(order.id)}
-                      whileHover={{ backgroundColor: 'rgba(75,175,212,0.05)' }}
-                      className="w-full flex items-center justify-between px-6 py-4 text-left transition-colors"
-                      style={{
-                        borderBottom: i < orders.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                        background: activeOrderId === order.id ? 'rgba(75,175,212,0.1)' : 'transparent',
-                      }}
+                      style={{ borderBottom: i < orders.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
                     >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{ background: activeOrderId === order.id ? '#4BAFD4' : 'rgba(255,255,255,0.2)' }}
-                        />
-                        <div>
-                          <p className="text-sm font-bold text-white">{order.orderNumber}</p>
-                          <p className="text-xs text-white/40">{PLAN_LABELS[order.planType]} · {formatPrice(order.amount)} · {formatDate(order.createdAt)}</p>
+                      {/* Header row */}
+                      <motion.button
+                        onClick={() => toggle(order.id)}
+                        whileHover={{ backgroundColor: 'rgba(75,175,212,0.04)' }}
+                        className="w-full flex items-center justify-between px-6 py-4 text-left transition-colors"
+                        style={{ background: isOpen ? 'rgba(75,175,212,0.08)' : 'transparent' }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-2 h-2 rounded-full shrink-0"
+                            style={{ background: isOpen ? '#4BAFD4' : 'rgba(255,255,255,0.2)' }} />
+                          <div>
+                            <p className="text-sm font-bold text-white">{order.orderNumber}</p>
+                            <p className="text-xs text-white/40">{PLAN_LABELS[order.planType]} · {formatPrice(order.amount)} · {formatDate(order.createdAt)}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={order.status} />
-                        <ChevronRight size={16} className="text-white/20" />
-                      </div>
-                    </motion.button>
-                  ))
-                )}
-              </motion.div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <StatusBadge status={order.status} />
+                          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                            <ChevronDown size={16} className="text-white/30" />
+                          </motion.div>
+                        </div>
+                      </motion.button>
 
-              {/* Status message if not delivered */}
-              {activeOrder && activeOrder.status !== 'DELIVERED' && (
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                  custom={3}
-                  className="rounded-[16px] p-5"
-                  style={{ background: 'rgba(75,175,212,0.08)', border: '1px solid rgba(75,175,212,0.2)' }}
-                >
-                  <p className="text-sm font-semibold text-[#4BAFD4] mb-1">⏳ Commande en cours de traitement</p>
-                  <p className="text-sm text-white/50">
-                    Votre compte IDF Mobilités est en cours de préparation. Vous recevrez un email dès que vos identifiants seront disponibles.
-                  </p>
-                </motion.div>
+                      {/* Expanded */}
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                            style={{ overflow: 'hidden' }}
+                          >
+                            <div className="px-6 pb-6 pt-1">
+                              <OrderExpanded
+                                order={order}
+                                credentialsUnlocked={credentialsUnlocked}
+                                email={email}
+                                dark
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )
+                })
               )}
-            </div>
+            </motion.div>
 
             {/* Sidebar: carte */}
             {activeOrder && (
@@ -274,7 +492,7 @@ export function ProfilDashboard({ email, orders }: Props) {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                custom={1}
+                custom={2}
                 className="flex flex-col items-center gap-5 sticky top-24"
               >
                 <NavigoCard3D
