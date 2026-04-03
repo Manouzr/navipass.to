@@ -112,7 +112,7 @@ function OtpUnlockBlock({ email, dark = false }: { email: string; dark?: boolean
     const newOtp = arr.join('')
     setOtp(newOtp)
     if (digit && i < 5) inputsRef.current[i + 1]?.focus()
-    if (newOtp.replace(/\s/g, '').length === 6 && !newOtp.includes('')) {
+    if (digit && newOtp.length === 6 && arr.every(d => d !== '')) {
       verifyCode(newOtp)
     }
   }
