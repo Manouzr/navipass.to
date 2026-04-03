@@ -29,6 +29,7 @@ export function AdminOrderActions({ order }: Props) {
   const [accountEmail, setAccountEmail] = useState('')
   const [accountPassword, setAccountPassword] = useState('')
   const [accountExpiry, setAccountExpiry] = useState('')
+  const [adminNote, setAdminNote] = useState('')
 
   async function handleMarkProcessing() {
     setLoading(true)
@@ -50,6 +51,7 @@ export function AdminOrderActions({ order }: Props) {
     fd.append('accountEmail', accountEmail)
     fd.append('accountPassword', accountPassword)
     fd.append('accountExpiry', accountExpiry)
+    if (adminNote.trim()) fd.append('adminNote', adminNote.trim())
 
     const result = await deliverOrder(fd)
 
@@ -128,11 +130,12 @@ export function AdminOrderActions({ order }: Props) {
         </div>
       )}
 
-      {order.status === 'PAID' && (
+      {(order.status === 'PAID' || order.status === 'PENDING') && (
         <CTAButton
           loading={loading}
           variant="secondary"
           onClick={handleMarkProcessing}
+          className="mb-4"
         >
           Marquer en traitement
         </CTAButton>
@@ -182,6 +185,23 @@ export function AdminOrderActions({ order }: Props) {
             error={fieldErrors.accountExpiry?.[0]}
             required
           />
+
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1.5">
+              Note pour le client <span className="text-text-secondary font-normal">(optionnel — apparaît dans l&apos;email)</span>
+            </label>
+            <textarea
+              value={adminNote}
+              onChange={(e) => setAdminNote(e.target.value)}
+              placeholder="Ex : Votre carte est activée, pensez à vous connecter sur idfmobilites.fr pour vérifier votre abonnement..."
+              rows={3}
+              maxLength={500}
+              className="w-full rounded-[12px] border border-[#E5E7EB] px-4 py-3 text-sm text-text-primary outline-none focus:border-[#4BAFD4] transition-colors resize-none bg-white"
+            />
+            {adminNote.length > 0 && (
+              <p className="text-xs text-text-secondary mt-1 text-right">{adminNote.length}/500</p>
+            )}
+          </div>
 
           <CTAButton type="submit" loading={loading} icon={<Send size={18} />}>
             {order.accountIssueReported ? 'Envoyer les nouveaux identifiants' : 'Livrer la commande'}

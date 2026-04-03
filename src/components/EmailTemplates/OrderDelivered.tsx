@@ -18,6 +18,7 @@ interface Props {
   accountPassword: string
   accountExpiry: Date
   magicUrl: string
+  adminNote?: string
 }
 
 const font = 'Arial, Helvetica, sans-serif'
@@ -34,6 +35,7 @@ export function OrderDeliveredEmail({
   accountPassword,
   accountExpiry,
   magicUrl,
+  adminNote,
 }: Props) {
   return (
     <Html lang="fr">
@@ -105,6 +107,26 @@ export function OrderDeliveredEmail({
             </Text>
 
             <Hr style={{ borderTop: `1px solid ${border}`, margin: '20px 0' }} />
+
+            {adminNote && (
+              <>
+                <Hr style={{ borderTop: `1px solid ${border}`, margin: '0 0 16px 0' }} />
+                <table width="100%" cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse', marginBottom: '16px' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ backgroundColor: '#FFF9E6', borderRadius: '6px', padding: '14px 16px', borderLeft: '3px solid #F59E0B' }}>
+                        <Text style={{ fontSize: '11px', fontWeight: '700', color: '#92400E', margin: '0 0 6px 0', fontFamily: font, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          Message de notre equipe
+                        </Text>
+                        <Text style={{ fontSize: '14px', color: '#78350F', margin: 0, fontFamily: font, lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                          {adminNote}
+                        </Text>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </>
+            )}
 
             <Text style={{ fontSize: '14px', color: grey, lineHeight: '1.7', margin: '0 0 20px 0', fontFamily: font }}>
               Conservez cet email. Vous pouvez egalement retrouver ces informations a tout moment

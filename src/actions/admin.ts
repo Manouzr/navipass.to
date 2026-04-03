@@ -165,6 +165,7 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
     accountEmail: formData.get('accountEmail') as string,
     accountPassword: formData.get('accountPassword') as string,
     accountExpiry: formData.get('accountExpiry') as string,
+    adminNote: (formData.get('adminNote') as string) || undefined,
   }
 
   const parsed = deliverOrderSchema.safeParse(raw)
@@ -176,7 +177,7 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
     }
   }
 
-  const { orderId, accountEmail, accountPassword, accountExpiry } = parsed.data
+  const { orderId, accountEmail, accountPassword, accountExpiry, adminNote } = parsed.data
 
   const encryptedEmail = encrypt(accountEmail)
   const encryptedPassword = encrypt(accountPassword)
@@ -218,6 +219,7 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
         accountPassword,
         accountExpiry: new Date(accountExpiry),
         magicUrl,
+        adminNote,
       })
     )
 

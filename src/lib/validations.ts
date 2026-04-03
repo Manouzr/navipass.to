@@ -31,6 +31,7 @@ export const deliverOrderSchema = z.object({
   accountEmail: z.string().email('Email du compte invalide'),
   accountPassword: z.string().min(6, 'Mot de passe trop court'),
   accountExpiry: z.string().refine((val) => !isNaN(Date.parse(val)), 'Date invalide'),
+  adminNote: z.string().max(500).optional(),
 })
 
 export type OrderFormData = z.infer<typeof orderFormSchema>
