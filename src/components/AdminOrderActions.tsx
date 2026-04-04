@@ -162,18 +162,15 @@ export function AdminOrderActions({ order }: Props) {
     </div>
   )
 
-  if (order.status === 'DELIVERED' && !order.accountIssueReported) {
-    return (
-      <Card padding="md" className="bg-green-50 border border-green-200">
-        <p className="text-sm font-semibold text-green-800 text-center">✓ Commande livrée</p>
-        {deleteBlock}
-      </Card>
-    )
-  }
-
   return (
     <Card padding="md">
-      <h2 className="text-sm font-semibold text-text-primary mb-4">Actions</h2>
+      {order.status === 'DELIVERED' && !order.accountIssueReported ? (
+        <div className="bg-green-100 border border-green-200 rounded-xl px-4 py-2.5 mb-4 text-center">
+          <p className="text-sm font-semibold text-green-800">✓ Commande livrée</p>
+        </div>
+      ) : (
+        <h2 className="text-sm font-semibold text-text-primary mb-4">Actions</h2>
+      )}
 
       {success && (
         <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-4">
