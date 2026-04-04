@@ -57,6 +57,12 @@ model Order {
   accountIssueReported   Boolean   @default(false)
   accountIssueReportedAt DateTime?
 
+  // Mail.gw forwarding
+  mailGwEmail          String?
+  mailGwPassword       String?
+  mailGwForwarding     Boolean   @default(false)
+  mailGwLastCheckedAt  DateTime?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deliveredAt DateTime?

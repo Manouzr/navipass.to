@@ -168,6 +168,9 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
     adminNote: (formData.get('adminNote') as string) || undefined,
   }
 
+  const mailGwEmailRaw = formData.get('mailGwEmail') as string | null
+  const mailGwPasswordRaw = formData.get('mailGwPassword') as string | null
+
   const parsed = deliverOrderSchema.safeParse(raw)
   if (!parsed.success) {
     return {
@@ -195,6 +198,12 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
       deliveredAt: new Date(),
       accountIssueReported: false,
       accountIssueReportedAt: null,
+      ...(mailGwEmailRaw && mailGwPasswordRaw ? {
+        mailGwEmail: encrypt(mailGwEmailRaw),
+        mailGwPassword: encrypt(mailGwPasswordRaw),
+        mailGwForwarding: true,
+        mailGwLastCheckedAt: new Date(),
+      } : {}),
     },
   })
 
@@ -236,6 +245,45 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
   revalidatePath('/admin/dashboard')
   revalidatePath(`/admin/commande/${orderId}`)
 
+  return { success: true, data: undefined }
+}
+
+export async function setMailGwForwarding(orderId: string, enabled: boolean): Promise<ActionResult> {
+  await requireAdmin()
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { mailGwForwarding: enabled },
+  })
+  revalidatePath(`/admin/commande/${orderId}`)
+  return { success: true, data: undefined }
+}
+
+export async function updateClientEmail(orderId: string, newEmail: string): Promise<ActionResult> {
+  await requireAdmin()
+  const email = newEmail.trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, error: 'Email invalide' }
+  }
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { email },
+  })
+  revalidatePath(`/admin/commande/${orderId}`)
+  return { success: true, data: undefined }
+}
+
+export async function saveMailGwCredentials(orderId: string, gwEmail: string, gwPassword: string): Promise<ActionResult> {
+  await requireAdmin()
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      mailGwEmail: encrypt(gwEmail.trim()),
+      mailGwPassword: encrypt(gwPassword),
+      mailGwForwarding: true,
+      mailGwLastCheckedAt: new Date(),
+    },
+  })
+  revalidatePath(`/admin/commande/${orderId}`)
   return { success: true, data: undefined }
 }
 

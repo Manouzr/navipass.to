@@ -124,7 +124,10 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           id: order.id,
           status: order.status,
           orderNumber: order.orderNumber,
+          clientEmail: order.email,
           accountIssueReported: order.accountIssueReported,
+          mailGwForwarding: order.mailGwForwarding,
+          hasMailGw: !!order.mailGwEmail,
         }} />
       </div>
     </div>
