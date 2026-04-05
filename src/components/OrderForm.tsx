@@ -44,6 +44,7 @@ export function OrderForm() {
   const [photoUrl, setPhotoUrl] = useState('')
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [noPhoto, setNoPhoto] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const selectedPlanData = PLANS.find((p) => p.type === selectedPlan)!
@@ -76,7 +77,7 @@ export function OrderForm() {
     if (!lastName.trim() || lastName.length < 2) errors.lastName = ['Nom requis']
     if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.email = ['Email invalide']
     if (!dateOfBirth) errors.dateOfBirth = ['Date de naissance requise']
-    if (!photoUrl) errors.photoUrl = ['Photo requise']
+    if (!photoUrl && !noPhoto) errors.photoUrl = ['Photo requise']
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -95,7 +96,7 @@ export function OrderForm() {
     fd.append('lastName', lastName)
     fd.append('email', email)
     fd.append('dateOfBirth', dateOfBirth)
-    fd.append('photoUrl', photoUrl)
+    fd.append('photoUrl', photoUrl || 'NO_PHOTO')
     if (refCode) fd.append('affiliateCode', refCode)
     const result = await createOrderAction(fd)
     if (!result.success) {
@@ -290,44 +291,79 @@ export function OrderForm() {
               <div className="p-4 border-b border-[#F3F4F6]">
                 <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Photo d&apos;identité</p>
               </div>
-              <div className="p-4">
-                <motion.button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  whileTap={{ scale: 0.98 }}
-                  className={cn(
-                    'w-full rounded-[12px] border-2 border-dashed p-5 flex flex-col items-center gap-3 transition-colors',
-                    photoPreview ? 'border-green-400 bg-green-50 lg:bg-green-500/10'
-                    : fieldErrors.photoUrl ? 'border-red-300 bg-red-50 lg:bg-red-500/10'
-                    : 'border-[#E5E7EB] bg-[#F9FAFB] hover:border-[#4BAFD4] lg:bg-[rgba(75,175,212,0.06)] lg:border-[rgba(75,175,212,0.2)] lg:hover:border-[#4BAFD4]'
-                  )}
-                >
-                  {photoPreview ? (
-                    <div className="flex items-center gap-4">
-                      <img src={photoPreview} alt="Preview" className="w-16 h-16 object-cover rounded-xl" />
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-green-700">Photo ajoutée ✓</p>
-                        <p className="text-xs text-text-secondary">Cliquer pour changer</p>
-                      </div>
-                    </div>
-                  ) : uploading ? (
-                    <p className="text-sm text-text-secondary">Upload en cours...</p>
-                  ) : (
-                    <>
-                      <div className="w-12 h-12 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center">
-                        <Upload size={20} className="text-[#4BAFD4]" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-semibold text-text-primary">Ajouter votre photo</p>
-                        <p className="text-xs text-text-secondary mt-0.5">JPG ou PNG · max 5MB</p>
-                      </div>
-                    </>
-                  )}
-                </motion.button>
-                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleFileChange} />
-                {fieldErrors.photoUrl?.[0] && (
-                  <p className="text-xs text-red-500 mt-2">{fieldErrors.photoUrl[0]}</p>
+              <div className="p-4 space-y-3">
+                {/* Alert info */}
+                <div className="rounded-[10px] px-3 py-2.5 flex items-start gap-2" style={{ background: '#EBF6FB', border: '1px solid #BAE6FD' }}>
+                  <span className="text-base shrink-0">📸</span>
+                  <p className="text-xs text-[#0369A1] leading-relaxed">
+                    <strong>Requise par IDF Mobilités</strong> pour créer votre compte. Photo de votre visage, fond neutre, bonne luminosité.
+                  </p>
+                </div>
+
+                {!noPhoto && (
+                  <>
+                    <motion.button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        'w-full rounded-[12px] border-2 border-dashed p-5 flex flex-col items-center gap-3 transition-colors',
+                        photoPreview ? 'border-green-400 bg-green-50 lg:bg-green-500/10'
+                        : fieldErrors.photoUrl ? 'border-red-300 bg-red-50 lg:bg-red-500/10'
+                        : 'border-[#E5E7EB] bg-[#F9FAFB] hover:border-[#4BAFD4] lg:bg-[rgba(75,175,212,0.06)] lg:border-[rgba(75,175,212,0.2)] lg:hover:border-[#4BAFD4]'
+                      )}
+                    >
+                      {photoPreview ? (
+                        <div className="flex items-center gap-4">
+                          <img src={photoPreview} alt="Preview" className="w-16 h-16 object-cover rounded-xl" />
+                          <div className="text-left">
+                            <p className="text-sm font-semibold text-green-700">Photo ajoutée ✓</p>
+                            <p className="text-xs text-text-secondary">Cliquer pour changer</p>
+                          </div>
+                        </div>
+                      ) : uploading ? (
+                        <p className="text-sm text-text-secondary">Upload en cours...</p>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center">
+                            <Upload size={20} className="text-[#4BAFD4]" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-semibold text-text-primary">Ajouter votre photo</p>
+                            <p className="text-xs text-text-secondary mt-0.5">JPG ou PNG · max 5MB</p>
+                          </div>
+                        </>
+                      )}
+                    </motion.button>
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleFileChange} />
+                    {fieldErrors.photoUrl?.[0] && (
+                      <p className="text-xs text-red-500">{fieldErrors.photoUrl[0]}</p>
+                    )}
+                  </>
                 )}
+
+                {noPhoto && (
+                  <div className="rounded-[12px] border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700 leading-relaxed">
+                    Pas de problème — vous pourrez ajouter ou modifier votre photo directement dans votre compte IDF Mobilités une fois activé.
+                  </div>
+                )}
+
+                {/* No photo checkbox */}
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={noPhoto}
+                    onChange={(e) => {
+                      setNoPhoto(e.target.checked)
+                      if (e.target.checked) {
+                        setPhotoUrl('')
+                        setPhotoPreview(null)
+                      }
+                    }}
+                    className="w-4 h-4 rounded accent-[#4BAFD4]"
+                  />
+                  <span className="text-xs text-text-secondary">Je n&apos;ai pas de photo disponible pour le moment</span>
+                </label>
               </div>
             </div>
 

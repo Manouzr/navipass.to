@@ -17,7 +17,7 @@ const PLANS = [
 const STEPS = [
   { icon: '📝', title: 'Remplissez vos infos', desc: 'Nom, prénom, photo et forfait souhaité' },
   { icon: '💳', title: 'Payez en ligne', desc: 'Paiement sécurisé Stripe. Aucune donnée bancaire stockée.' },
-  { icon: '✉️', title: 'Recevez votre compte', desc: 'Identifiants IDF Mobilités par email sous 24–48h.' },
+  { icon: '✉️', title: 'Recevez vos identifiants', desc: 'Identifiants IDF Mobilités reçus par email sous 24–48h. Accès via l\'application IDF Mobilités.' },
 ]
 
 const GUARANTEES = [
@@ -63,7 +63,10 @@ export default function HomePage() {
             className="mt-2 flex flex-col items-center"
           >
             <p className="text-xs font-medium text-text-secondary mb-3 self-start">Mon abonnement</p>
-            <NavigoCard status="PENDING" tilt className="max-w-[200px]" />
+            <Link href="/commander">
+              <NavigoCard status="PENDING" tilt className="max-w-[200px]" />
+            </Link>
+            <p className="text-[11px] font-semibold mt-2" style={{ color: '#4BAFD4' }}>Compte numérique · Application IDF Mobilités</p>
           </motion.div>
 
           {/* CTA */}
@@ -152,8 +155,8 @@ export default function HomePage() {
             className="rounded-[16px] p-4"
             style={{ background: '#EBF6FB', border: '1px solid #BAE6FD' }}
           >
-            <p className="text-sm font-semibold text-[#0369A1] mb-1">Service sécurisé · Réseau complet IDF</p>
-            <p className="text-xs text-[#0369A1] leading-relaxed">Valable sur tout le réseau : métro, RER, bus et tramway · Paiement Stripe sécurisé · Livraison sous 48h.</p>
+            <p className="text-sm font-semibold text-[#0369A1] mb-1">Compte numérique sur l&apos;application IDF Mobilités</p>
+            <p className="text-xs text-[#0369A1] leading-relaxed">Vous recevez des identifiants pour accéder à votre abonnement Navigo via l&apos;application officielle IDF Mobilités. Valable sur tout le réseau : métro, RER, bus et tramway.</p>
           </motion.div>
 
           {/* Affiliate CTA */}
@@ -539,7 +542,7 @@ export default function HomePage() {
             <span className="text-white font-black text-lg">NaviPass</span>
           </div>
           <p className="text-white/30 text-sm mb-4">
-            Service non officiel · Pas affilié à IDF Mobilités · © {new Date().getFullYear()}
+            Compte numérique sur l&apos;application IDF Mobilités · Service indépendant · © {new Date().getFullYear()}
           </p>
           <div className="flex items-center justify-center gap-6">
             <Link href="/cgv" className="text-white/30 hover:text-white/60 text-xs transition-colors">
