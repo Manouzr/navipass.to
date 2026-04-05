@@ -6,6 +6,7 @@ import { signMagicToken } from '@/lib/jwt'
 import { getAppUrl } from '@/lib/utils'
 import { OrderConfirmationEmail } from '@/components/EmailTemplates/OrderConfirmation'
 import { creditAffiliateReferral } from '@/actions/affiliate'
+import { getPostHogServer } from '@/lib/posthog'
 import { render } from '@react-email/components'
 import Stripe from 'stripe'
 
@@ -46,6 +47,23 @@ export async function POST(req: NextRequest) {
         stripePaidAt: new Date(),
       },
     })
+
+    // PostHog — payment confirmed
+    try {
+      const ph = getPostHogServer()
+      ph.capture({
+        distinctId: order.email,
+        event: 'payment_completed',
+        properties: {
+          order_number: order.orderNumber,
+          plan: order.planType,
+          amount: order.amount / 100,
+          currency: 'EUR',
+          affiliate_code: affiliateCode ?? null,
+        },
+      })
+      await ph.shutdown()
+    } catch {}
 
     // Credit affiliate commission if applicable
     if (affiliateCode) {

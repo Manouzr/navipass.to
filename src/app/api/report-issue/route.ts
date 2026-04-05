@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { verifyCredentialsToken, verifyProfilToken } from '@/lib/jwt'
 import { prisma } from '@/lib/prisma'
+import { getPostHogServer } from '@/lib/posthog'
 
 export async function POST(req: NextRequest) {
   // Must be logged in to profil
@@ -43,6 +44,16 @@ export async function POST(req: NextRequest) {
       accountIssueReportedAt: new Date(),
     },
   })
+
+  try {
+    const ph = getPostHogServer()
+    ph.capture({
+      distinctId: email,
+      event: 'account_issue_reported',
+      properties: { order_id: orderId },
+    })
+    await ph.shutdown()
+  } catch {}
 
   return NextResponse.json({ success: true })
 }

@@ -12,6 +12,7 @@ import { getAppUrl } from '@/lib/utils'
 import { OrderDeliveredEmail } from '@/components/EmailTemplates/OrderDelivered'
 import { render } from '@react-email/components'
 import { revalidatePath } from 'next/cache'
+import { getPostHogServer } from '@/lib/posthog'
 import type { ActionResult } from './order'
 
 export async function loginAdmin(formData: FormData): Promise<ActionResult> {
@@ -241,6 +242,24 @@ export async function deliverOrder(formData: FormData): Promise<ActionResult> {
   } catch (emailErr) {
     console.error('Failed to send delivery email:', emailErr)
   }
+
+  // PostHog — order delivered
+  try {
+    const ph = getPostHogServer()
+    ph.capture({
+      distinctId: order.email,
+      event: 'order_delivered',
+      properties: {
+        order_number: order.orderNumber,
+        plan: order.planType,
+        amount: order.amount / 100,
+        is_replacement: isReplacement,
+        has_admin_note: !!adminNote,
+        mail_gw_forwarding: !!(mailGwEmailRaw && mailGwPasswordRaw),
+      },
+    })
+    await ph.shutdown()
+  } catch {}
 
   revalidatePath('/admin/dashboard')
   revalidatePath(`/admin/commande/${orderId}`)

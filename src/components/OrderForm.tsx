@@ -8,6 +8,7 @@ import { RoundedInput } from '@/components/ui/RoundedInput'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/utils'
 import { createOrderAction } from '@/actions/order'
+import posthog from 'posthog-js'
 
 const PLANS = [
   { type: 'WEEK', label: 'Navigo Semaine', price: 500, description: '7 jours consécutifs · Zones 1–5' },
@@ -83,6 +84,11 @@ export function OrderForm() {
   async function handleSubmit() {
     setLoading(true)
     setError(null)
+    posthog.capture('order_checkout_initiated', {
+      plan: selectedPlan,
+      amount: selectedPlanData.price / 100,
+      ref: refCode || undefined,
+    })
     const fd = new FormData()
     fd.append('planType', selectedPlan)
     fd.append('firstName', firstName)
@@ -214,7 +220,10 @@ export function OrderForm() {
             })}
 
             <motion.button
-              onClick={() => goTo(2)}
+              onClick={() => {
+                posthog.capture('order_plan_selected', { plan: selectedPlan })
+                goTo(2)
+              }}
               whileTap={{ scale: 0.97 }}
               className="w-full rounded-full py-4 text-base font-semibold text-white flex items-center justify-center gap-2"
               style={{ background: '#4BAFD4' }}
