@@ -8,7 +8,8 @@ import { ProfilDashboard } from '@/components/ProfilDashboard'
 export const dynamic = 'force-dynamic'
 
 export default async function ProfilPage() {
-  const token = cookies().get('profil_session')?.value
+  const cookieStore = await cookies()
+  const token = cookieStore.get('profil_session')?.value
   const email = token ? await verifyProfilToken(token) : null
 
   if (!email) {
@@ -16,7 +17,7 @@ export default async function ProfilPage() {
   }
 
   // Vérifier si les identifiants sont déverrouillés
-  const credToken = cookies().get('credentials_unlocked')?.value
+  const credToken = cookieStore.get('credentials_unlocked')?.value
   const credEmail = credToken ? await verifyCredentialsToken(credToken) : null
   const credentialsUnlocked = credEmail?.toLowerCase() === email.toLowerCase()
 

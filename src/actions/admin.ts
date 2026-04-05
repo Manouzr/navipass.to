@@ -37,7 +37,8 @@ export async function loginAdmin(formData: FormData): Promise<ActionResult> {
 
   const token = await signAdminToken(email)
 
-  cookies().set('admin_token', token, {
+  const cookieStore = await cookies()
+  cookieStore.set('admin_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
@@ -49,12 +50,14 @@ export async function loginAdmin(formData: FormData): Promise<ActionResult> {
 }
 
 export async function logoutAdmin() {
-  cookies().delete('admin_token')
+  const cookieStore = await cookies()
+  cookieStore.delete('admin_token')
   redirect('/admin')
 }
 
 export async function requireAdmin() {
-  const token = cookies().get('admin_token')?.value
+  const cookieStore = await cookies()
+  const token = cookieStore.get('admin_token')?.value
   if (!token || !(await verifyAdminToken(token))) {
     redirect('/admin')
   }

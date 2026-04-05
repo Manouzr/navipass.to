@@ -9,13 +9,14 @@ import { decrypt } from '@/lib/crypto'
 import { AdminOrderActions } from '@/components/AdminOrderActions'
 
 interface Props {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default async function AdminOrderDetailPage({ params }: Props) {
   await requireAdmin()
+  const { id } = await params
 
-  const order = await getAdminOrderById(params.id)
+  const order = await getAdminOrderById(id)
   if (!order) notFound()
 
   let accountEmail: string | null = null

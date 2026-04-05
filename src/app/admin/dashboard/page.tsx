@@ -8,15 +8,16 @@ import { formatPrice, formatDate, PLAN_LABELS } from '@/lib/utils'
 import { OrderStatus } from '@prisma/client'
 
 interface Props {
-  searchParams: { page?: string; status?: string; search?: string }
+  searchParams: Promise<{ page?: string; status?: string; search?: string }>
 }
 
 export default async function AdminDashboardPage({ searchParams }: Props) {
   await requireAdmin()
+  const sp = await searchParams
 
-  const page = parseInt(searchParams.page ?? '1')
-  const status = searchParams.status ?? 'ALL'
-  const search = searchParams.search ?? ''
+  const page = parseInt(sp.page ?? '1')
+  const status = sp.status ?? 'ALL'
+  const search = sp.search ?? ''
 
   const [stats, { orders, total, pages }] = await Promise.all([
     getAdminStats(),

@@ -6,14 +6,15 @@ import { getPostHogServer } from '@/lib/posthog'
 
 export async function POST(req: NextRequest) {
   // Must be logged in to profil
-  const profilToken = cookies().get('profil_session')?.value
+  const cookieStore = await cookies()
+  const profilToken = cookieStore.get('profil_session')?.value
   const email = profilToken ? await verifyProfilToken(profilToken) : null
   if (!email) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
 
   // Must have credentials unlocked
-  const credToken = cookies().get('credentials_unlocked')?.value
+  const credToken = cookieStore.get('credentials_unlocked')?.value
   const credEmail = credToken ? await verifyCredentialsToken(credToken) : null
   if (!credEmail || credEmail.toLowerCase() !== email.toLowerCase()) {
     return NextResponse.json({ error: 'Vérification requise' }, { status: 403 })

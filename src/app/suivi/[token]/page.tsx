@@ -9,10 +9,11 @@ import { decrypt } from '@/lib/crypto'
 import { NavigoCard3D } from '@/components/ui/NavigoCard3D'
 import { TrackingPageClient } from '@/components/TrackingPageClient'
 
-interface Props { params: { token: string } }
+interface Props { params: Promise<{ token: string }> }
 
 export default async function OrderTrackingPage({ params }: Props) {
-  const order = await getOrderByMagicToken(params.token)
+  const { token } = await params
+  const order = await getOrderByMagicToken(token)
   if (!order) notFound()
 
   let accountEmail: string | null = null

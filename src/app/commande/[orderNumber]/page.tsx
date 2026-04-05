@@ -9,15 +9,17 @@ import { CopyButton } from '@/components/CopyButton'
 import { GoogleAdsConversion } from '@/components/GoogleAdsConversion'
 
 interface Props {
-  params: { orderNumber: string }
+  params: Promise<{ orderNumber: string }>
 }
 
 export async function generateMetadata({ params }: Props) {
-  return { title: `Commande ${params.orderNumber} — NaviPass` }
+  const { orderNumber } = await params
+  return { title: `Commande ${orderNumber} — NaviPass` }
 }
 
 export default async function OrderConfirmationPage({ params }: Props) {
-  const order = await getOrderByNumber(params.orderNumber)
+  const { orderNumber } = await params
+  const order = await getOrderByNumber(orderNumber)
   if (!order) notFound()
 
   return (
