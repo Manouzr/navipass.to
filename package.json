@@ -18,7 +18,7 @@
     "@stripe/stripe-js": "^3.2.0",
     "framer-motion": "^11.2.0",
     "jose": "^5.2.4",
-    "lucide-react": "^0.376.0",
+    "lucide-react": "^1.7.0",
     "next": "^15.3.0",
     "posthog-js": "^1.364.7",
     "posthog-node": "^5.28.11",
