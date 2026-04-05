@@ -13,7 +13,7 @@ export function GoogleAdsConversion({ value, currency = 'EUR', orderId }: Props)
     const w = window as unknown as { gtag?: (...args: unknown[]) => void }
     if (!w.gtag) return
     w.gtag('event', 'conversion', {
-      send_to: 'AW-10829056629',
+      send_to: 'AW-10829056629/2CqKCIDqjJYcEPWU2aso',
       value: value / 100,
       currency,
       transaction_id: orderId,
