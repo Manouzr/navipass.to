@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getOrderByNumber } from '@/actions/order'
 import { formatDate, formatPrice, PLAN_LABELS } from '@/lib/utils'
 import { CopyButton } from '@/components/CopyButton'
+import { GoogleAdsConversion } from '@/components/GoogleAdsConversion'
 
 interface Props {
   params: { orderNumber: string }
@@ -21,6 +22,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-white">
+      <GoogleAdsConversion value={order.amount} orderId={order.orderNumber} />
       <PageHeader greeting="Merci !" title="Commande confirmée" />
 
       <div className="px-5 pt-4 pb-8 space-y-4">

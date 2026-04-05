@@ -49,12 +49,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
       </head>
-      <Script src="https://www.googletagmanager.com/gtag/js?id=G-044J4N9C75" strategy="afterInteractive" />
-      <Script id="google-analytics" strategy="afterInteractive">{`
+      <Script src="https://www.googletagmanager.com/gtag/js?id=AW-10829056629" strategy="afterInteractive" />
+      <Script id="google-tags" strategy="afterInteractive">{`
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-044J4N9C75');
+        gtag('config', 'AW-10829056629');
       `}</Script>
       <body className="min-h-screen bg-[#F2F2F2] lg:bg-[#0A1628]">
         <ServiceWorkerRegistration />
