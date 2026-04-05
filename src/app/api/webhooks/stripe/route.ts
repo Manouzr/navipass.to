@@ -7,7 +7,7 @@ import { getAppUrl } from '@/lib/utils'
 import { OrderConfirmationEmail } from '@/components/EmailTemplates/OrderConfirmation'
 import { creditAffiliateReferral } from '@/actions/affiliate'
 import { getPostHogServer } from '@/lib/posthog'
-import { render } from '@react-email/components'
+import { render } from '@react-email/render'
 import Stripe from 'stripe'
 
 export async function POST(req: NextRequest) {

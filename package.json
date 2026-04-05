@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@prisma/client": "^5.11.0",
-    "@react-email/components": "^0.0.19",
+    "@react-email/components": "^1.0.11",
+    "@react-email/render": "^2.0.5",
     "@stripe/stripe-js": "^3.2.0",
     "framer-motion": "^11.2.0",
     "jose": "^5.2.4",
@@ -24,7 +25,6 @@
     "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-email": "^2.1.4",
     "resend": "^3.2.0",
     "sharp": "^0.33.3",
     "stripe": "^14.25.0",

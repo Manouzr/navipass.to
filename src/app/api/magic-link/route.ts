@@ -5,7 +5,7 @@ import { resend, EMAIL_FROM } from '@/lib/resend'
 import { trackingFormSchema } from '@/lib/validations'
 import { getAppUrl } from '@/lib/utils'
 import { MagicLinkEmail } from '@/components/EmailTemplates/MagicLink'
-import { render } from '@react-email/components'
+import { render } from '@react-email/render'
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
