@@ -6,6 +6,7 @@ import { trackingFormSchema } from '@/lib/validations'
 import { getAppUrl } from '@/lib/utils'
 import { MagicLinkEmail } from '@/components/EmailTemplates/MagicLink'
 import { render } from '@react-email/render'
+import { getPostHogServer } from '@/lib/posthog'
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
@@ -67,6 +68,16 @@ export async function POST(req: NextRequest) {
       subject: `Accédez à votre commande NaviPass — ${orderNumber}`,
       html,
     })
+
+    try {
+      const ph = getPostHogServer()
+      ph.capture({
+        distinctId: order.email,
+        event: 'magic_link_sent',
+        properties: { order_number: orderNumber },
+      })
+      await ph.shutdown()
+    } catch {}
 
     // In development, return the token directly for testing
     if (process.env.NODE_ENV === 'development') {

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Mail, ArrowRight, User } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { NavigoCard3D } from '@/components/ui/NavigoCard3D'
+import posthog from 'posthog-js'
 
 export function ProfilLoginPage() {
   const router = useRouter()
@@ -31,6 +32,8 @@ export function ProfilLoginPage() {
         return
       }
 
+      posthog.identify(email, { email })
+      posthog.capture('profil_login_submitted', { email })
       router.refresh()
     } catch {
       setError('Erreur réseau')

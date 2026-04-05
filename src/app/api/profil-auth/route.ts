@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { signProfilToken } from '@/lib/jwt'
 import { z } from 'zod'
+import { getPostHogServer } from '@/lib/posthog'
 
 const schema = z.object({
   email: z.string().email(),
@@ -27,6 +28,13 @@ export async function POST(req: NextRequest) {
     }
 
     const token = await signProfilToken(email.toLowerCase())
+
+    try {
+      const ph = getPostHogServer()
+      ph.identify({ distinctId: email.toLowerCase(), properties: { email: email.toLowerCase() } })
+      ph.capture({ distinctId: email.toLowerCase(), event: 'profil_authenticated', properties: { order_count: orderCount } })
+      await ph.shutdown()
+    } catch {}
 
     const res = NextResponse.json({ success: true })
     res.cookies.set('profil_session', token, {

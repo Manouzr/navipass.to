@@ -11,6 +11,7 @@ import { NavigoCard } from '@/components/ui/NavigoCard'
 import { NavigoCard3D } from '@/components/ui/NavigoCard3D'
 import { PLAN_LABELS, formatPrice, formatDate } from '@/lib/utils'
 import Link from 'next/link'
+import posthog from 'posthog-js'
 
 interface OrderData {
   id: string
@@ -85,6 +86,7 @@ function OtpUnlockBlock({ email, dark = false }: { email: string; dark?: boolean
       if (!res.ok) { setError(data.error); return }
       setChallengeToken(data.challengeToken)
       setStep('sent')
+      posthog.capture('credentials_unlock_requested')
     } catch { setError('Erreur réseau') }
     finally { setLoading(false) }
   }
@@ -100,6 +102,7 @@ function OtpUnlockBlock({ email, dark = false }: { email: string; dark?: boolean
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error); return }
+      posthog.capture('credentials_unlocked')
       router.refresh()
     } catch { setError('Erreur réseau') }
     finally { setLoading(false) }
@@ -343,6 +346,8 @@ export function ProfilDashboard({ email, orders, credentialsUnlocked }: Props) {
 
   async function handleLogout() {
     setLoggingOut(true)
+    posthog.capture('user_logged_out')
+    posthog.reset()
     await fetch('/api/profil-auth', { method: 'DELETE' })
     await fetch('/api/profil-verify', { method: 'DELETE' })
     router.refresh()

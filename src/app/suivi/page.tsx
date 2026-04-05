@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { RoundedInput } from '@/components/ui/RoundedInput'
 import { NavigoCard3D } from '@/components/ui/NavigoCard3D'
+import posthog from 'posthog-js'
 
 export default function SuiviPage() {
   const router = useRouter()
@@ -28,6 +29,7 @@ export default function SuiviPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Commande introuvable'); return }
+      posthog.capture('magic_link_requested', { order_number: orderNumber.toUpperCase() })
       if (data.token) { router.push(`/suivi/${data.token}`) }
       else { setSent(true) }
     } catch { setError('Erreur réseau') }
