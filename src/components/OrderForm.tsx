@@ -3,8 +3,9 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Upload, User, Mail, Calendar, Check, ArrowLeft, ArrowRight } from 'lucide-react'
+import { Upload, User, Mail, Check, ArrowLeft, ArrowRight } from 'lucide-react'
 import { RoundedInput } from '@/components/ui/RoundedInput'
+import { DateOfBirthInput } from '@/components/ui/DateOfBirthInput'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/utils'
 import { createOrderAction } from '@/actions/order'
@@ -275,12 +276,9 @@ export function OrderForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   error={fieldErrors.email?.[0]}
                 />
-                <RoundedInput
-                  label="Date de naissance"
-                  type="date"
-                  icon={<Calendar size={16} />}
+                <DateOfBirthInput
                   value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  onChange={setDateOfBirth}
                   error={fieldErrors.dateOfBirth?.[0]}
                 />
               </div>
