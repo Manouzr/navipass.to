@@ -63,8 +63,8 @@ export default function HomePage() {
             className="mt-2 flex flex-col items-center"
           >
             <p className="text-xs font-medium text-text-secondary mb-3 self-start">Mon abonnement</p>
-            <Link href="/commander">
-              <NavigoCard status="PENDING" tilt className="max-w-[200px]" />
+            <Link href="/commander" className="block w-full max-w-[200px]">
+              <NavigoCard status="PENDING" tilt />
             </Link>
             <p className="text-[11px] font-semibold mt-2" style={{ color: '#4BAFD4' }}>Compte numérique · Application IDF Mobilités</p>
           </motion.div>
